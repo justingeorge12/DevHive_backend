@@ -1,8 +1,12 @@
 
-from django.urls import path
+from django.urls import path, include
 from . views import *
 from rest_framework_simplejwt.views import  TokenRefreshView
+from rest_framework.routers import DefaultRouter
 
+router = DefaultRouter()
+router.register(r'listusers',ListUsers, basename='listuser')
+router.register(r'listtags',ListTags, basename='listtags')
 
 urlpatterns = [
 
@@ -12,7 +16,9 @@ urlpatterns = [
     path('resendotp', ResendOtpView.as_view(), name='resendotp'),
     path('otp', OtpView.as_view(), name='otp'),
     path('getemail',getEmail.as_view(), name='getemail'),
-    path('forgetpass', forgetPasswor.as_view(), name='forgetpass')
+    path('forgetpass', forgetPasswor.as_view(), name='forgetpass'),
+    path('logout',Logout.as_view(), name='logout' ),
+    path('',include(router.urls)),
 
 
 

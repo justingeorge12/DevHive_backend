@@ -1,11 +1,16 @@
 from django.shortcuts import render
+from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import UserSerializer, ListUsersSeralizer
+from rest_framework.viewsets import ReadOnlyModelViewSet
+# from rest_framework import filters
+# from rest_framework.filters import OrderingFilter
 from .models import Users
-from .serializers import UserSerializer
+from adminapp.models import Tag
+from adminapp.serializer import TagSerializer
 
 from .signal import generate_otp, send_otp_email
 
@@ -143,12 +148,39 @@ class forgetPasswor(APIView):
         send_otp_email(email, otp)
         print('otp succesfully avvandath ahnu')
         return Response(data='password has changed', status=status.HTTP_200_OK)
+    
 
+class Logout(APIView):
+    def post(self, request):
+        try:
+            refresh = request.data['refresh']
+            token = RefreshToken(refresh)
+            token.blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         
 
+class ListUsers(ReadOnlyModelViewSet):
+    queryset = Users.objects.filter(is_superuser = False).order_by('-total_votes')
+    serializer_class = ListUsersSeralizer
+
+    # ordering_fields = ['username', 'date_of_join', 'total_votes']
 
 
+
+    # filter_backends = [filters.OrderingFilter]
+    # ordering_fields = ['total_votes', 'username', 'location']  # Allow ordering by these fields
+    # # ordering = ['-total_votes']  # Default ordering if no parameter is specified
+  
+
+class ListTags(ReadOnlyModelViewSet):
+    print('call came through this way ') 
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    
+    
 
 
 # class HomeView(APIView):
