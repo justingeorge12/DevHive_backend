@@ -28,12 +28,14 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(email=email, username=username, password=password, **extra_fields)
 
+AUTH_PROVIDERS = {'email':'email', 'google':'google', 'github':'github', 'facebook':'facebook'}
 
 class Users(AbstractUser):
     username = models.CharField(max_length=100)
     email = models.EmailField(max_length=150, unique = True)
     bio = models.TextField(blank= True)
     profile = models.ImageField(upload_to='profile/', null= True, blank=True)
+    skill = models.CharField(blank=True)
     phone = models.CharField(max_length=15, blank= True)
     otp = models.CharField(max_length=10, null=True, blank=True)
     is_verified = models.BooleanField(default=False)
@@ -42,6 +44,7 @@ class Users(AbstractUser):
     location = models.CharField(null=True, blank= True)
     total_votes = models.IntegerField(default=0)
     is_blocked = models.BooleanField(blank=True, null=True)
+    auth_provider = models.CharField(max_length=50, default=AUTH_PROVIDERS.get("email"))
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username",]

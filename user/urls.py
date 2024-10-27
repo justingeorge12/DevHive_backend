@@ -7,6 +7,7 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(r'listusers',ListUsers, basename='listuser')
 router.register(r'listtags',ListTags, basename='listtags')
+router.register(r'userprofile', UserProfile, basename='userprofile')
 
 urlpatterns = [
 
@@ -18,6 +19,12 @@ urlpatterns = [
     path('getemail',getEmail.as_view(), name='getemail'),
     path('forgetpass', forgetPasswor.as_view(), name='forgetpass'),
     path('logout',Logout.as_view(), name='logout' ),
+
+    path('userquestion', UserQuestionView.as_view(), name='userquestion'),
+    path('useranswer', UserAnswerView.as_view(), name='useranswer'),
+    path('updateuserprofile', UserProfileUpdateView.as_view(), name='updateuserprofile'),
+    path('google/', GoogleSignInView.as_view(), name='google'),
+
     path('',include(router.urls)),
 
 

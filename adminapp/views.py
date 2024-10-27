@@ -8,6 +8,9 @@ from rest_framework import viewsets
 from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from user.models import Users
 
+from QA.serializer import QuestionSerializer, AnswerSerializer
+from QA.models import Question, Answers
+
 # Create your views here.
 
 class ManageTag(viewsets.ModelViewSet):
@@ -27,3 +30,17 @@ class UserManage(RetrieveUpdateAPIView):
     lookup_field = 'id'
     def get_queryset(self):
         return Users.objects.filter(is_superuser=False)
+
+class ListQuestions(ListAPIView):
+    serializer_class = QuestionSerializer
+
+    def get_queryset(self):
+        return Question.objects.all()
+    
+
+class ListAnswers(ListAPIView):
+    serializer_class = AnswerSerializer
+
+    def get_queryset(self):
+        return Answers.objects.all()
+    

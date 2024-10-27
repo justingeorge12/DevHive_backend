@@ -11,5 +11,6 @@ urlpatterns = [
     path('', include(router.urls)), 
     path('usermanage',UserList.as_view(), name='usermanage'),
     path('usermanage/<int:id>',UserManage.as_view(), name='usermanage'),
-    
+    path('listquesiton', ListQuestions.as_view(), name='listquestion'),
+    path('listanswers', ListAnswers.as_view(), name='listanswers'),
 ]

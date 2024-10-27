@@ -51,6 +51,7 @@ INSTALLED_APPS = [
 
     'user',
     'adminapp',
+    'QA',
 
     'django.contrib.sites',
     'allauth',
@@ -208,6 +209,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
 
 
 EMAIL_BACKEND=os.getenv('EMAIL_BACKEND')
@@ -225,3 +230,9 @@ AUTHENTICATION_BACKENDS = (
 )
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_SECRET')
+GOOGLE_AUTH_PASSWORD = os.getenv('SOCIAL_PASSWORD')
+ 

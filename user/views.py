@@ -1,11 +1,13 @@
 from django.shortcuts import render
-from rest_framework import status, generics
+from rest_framework import status, generics, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserSerializer, ListUsersSeralizer
 from rest_framework.viewsets import ReadOnlyModelViewSet
+from rest_framework.generics import RetrieveUpdateAPIView, GenericAPIView
+from .serializers import UserSerializer, ListUsersSeralizer
+from .SocialSerializer.socialserializer import GoogleSignInSerializer
 # from rest_framework import filters
 # from rest_framework.filters import OrderingFilter
 from .models import Users
@@ -17,6 +19,10 @@ from .signal import generate_otp, send_otp_email
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
+from rest_framework.generics import ListAPIView
+
+from QA.serializer import QuestionSerializer, AnswerSerializer
+from QA.models import Question, Answers
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -176,11 +182,71 @@ class ListUsers(ReadOnlyModelViewSet):
   
 
 class ListTags(ReadOnlyModelViewSet):
-    print('call came through this way ') 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+
+
+
+class UserProfile(viewsets.ModelViewSet):
+    """
+        view set for managing user profile
+    """
     
+    queryset = Users.objects.all()
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Users.objects.filter(id = user.id)
     
+
+
+class UserQuestionView(ListAPIView):
+    serializer_class = QuestionSerializer
+
+    def get_queryset(self):
+        return Question.objects.filter(user=self.request.user)
+    
+
+class UserAnswerView(ListAPIView):
+    serializer_class = AnswerSerializer
+
+    def get_queryset(self):
+        return Answers.objects.filter(user=self.request.user)
+
+
+class UserProfileUpdateView(RetrieveUpdateAPIView):
+    queryset = Users.objects.all()
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        print(self.request.user)
+        return self.request.user 
+    
+    def update(self, request, *args, **kwargs):
+        print("Request data:", request.data)  # Print request data for debugging
+        partial = kwargs.pop('partial', True)  # Allow partial updates
+        instance = self.get_object()
+        if request.data.get('remove_image') == 'true':
+            instance.profile.delete(save=False)
+            instance.profile = None            
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+class GoogleSignInView(GenericAPIView):
+    serializer_class=GoogleSignInSerializer
+
+    def post(self, request):
+        serializers = self.serializer_class(data=request.data)
+        serializers.is_valid(raise_exception=True)
+        data = ((serializers.validated_data)['access_token'])
+        return Response(data, status=status.HTTP_200_OK)
 
 
 # class HomeView(APIView):
