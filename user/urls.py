@@ -23,7 +23,9 @@ urlpatterns = [
     path('userquestion', UserQuestionView.as_view(), name='userquestion'),
     path('useranswer', UserAnswerView.as_view(), name='useranswer'),
     path('updateuserprofile', UserProfileUpdateView.as_view(), name='updateuserprofile'),
-    path('google/', GoogleSignInView.as_view(), name='google'),
+    path('changepassword', ChangePassword.as_view(), name='changepassword'),
+
+    path('google', GoogleSignInView.as_view(), name='google'),
 
     path('',include(router.urls)),
 

@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.generics import RetrieveUpdateAPIView, GenericAPIView
-from .serializers import UserSerializer, ListUsersSeralizer
+from .serializers import UserSerializer, ListUsersSeralizer, ChangePasswordSerializer, CustomTokenObtainPairSerializer
 from .SocialSerializer.socialserializer import GoogleSignInSerializer
 # from rest_framework import filters
 # from rest_framework.filters import OrderingFilter
@@ -17,12 +17,13 @@ from adminapp.serializer import TagSerializer
 from .signal import generate_otp, send_otp_email
 
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from rest_framework.generics import ListAPIView
 
 from QA.serializer import QuestionSerializer, AnswerSerializer
 from QA.models import Question, Answers
+
+from .utils import register_social_user
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -37,33 +38,6 @@ class CreateUserView(generics.CreateAPIView):
 
 
 
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        
-        if user.is_superuser:
-            role = 'admin'
-        else:
-            role = 'user'
-
-        token['role'] = role  
-        token['is_verified'] = user.is_verified
-        
-        return token
-
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        
-        if self.user.is_superuser:
-            role = 'admin'
-        else:
-            role = 'user'
-
-        data['role'] = role  
-        data['is_verified'] = self.user.is_verified
-        
-        return data
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -213,6 +187,9 @@ class UserAnswerView(ListAPIView):
 
     def get_queryset(self):
         return Answers.objects.filter(user=self.request.user)
+    
+# class UserSavedView(ListAPIView):
+
 
 
 class UserProfileUpdateView(RetrieveUpdateAPIView):
@@ -241,12 +218,50 @@ class UserProfileUpdateView(RetrieveUpdateAPIView):
 
 class GoogleSignInView(GenericAPIView):
     serializer_class=GoogleSignInSerializer
+    permission_classes = [AllowAny]
+
 
     def post(self, request):
         serializers = self.serializer_class(data=request.data)
         serializers.is_valid(raise_exception=True)
-        data = ((serializers.validated_data)['access_token'])
-        return Response(data, status=status.HTTP_200_OK)
+
+        # data = ((serializers.validated_data)['access_token'])
+        data = serializers.validated_data
+
+
+        result = register_social_user(
+            provider = 'google',
+            email=data['access_token'].get('email'),
+            first_name=data['access_token'].get('user'),
+            last_name=data['access_token'].get('last_name')
+        )
+        return Response(result, status=status.HTTP_200_OK)
+
+
+
+
+class ChangePassword(APIView):
+
+    def post(self, request, *args, **kwargs):
+        serializer = ChangePasswordSerializer(data = request.data , context = {'request':request})
+        serializer.is_valid(raise_exception=True)
+
+        request.user.set_password(serializer.validated_data['new_password'])
+        request.user.save()
+
+        return Response({'detail': 'change password succesfull'}, status=status.HTTP_200_OK )
+
+
+
+    
+
+
+
+
+
+
+
+
 
 
 # class HomeView(APIView):

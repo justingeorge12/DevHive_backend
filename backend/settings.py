@@ -101,6 +101,13 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173/",
+]
+
+
+
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -234,5 +241,5 @@ LOGOUT_REDIRECT_URL = '/'
 
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_SECRET')
-GOOGLE_AUTH_PASSWORD = os.getenv('SOCIAL_PASSWORD')
+SOCIAL_AUTH_PASSWORD = os.getenv('SOCIAL_PASSWORD')
  
