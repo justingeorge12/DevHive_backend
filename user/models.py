@@ -43,7 +43,7 @@ class Users(AbstractUser):
     coins = models.IntegerField(default=0)
     location = models.CharField(null=True, blank= True)
     total_votes = models.IntegerField(default=0)
-    is_blocked = models.BooleanField(blank=True, null=True)
+    is_blocked = models.BooleanField(default=False)
     auth_provider = models.CharField(max_length=50, default=AUTH_PROVIDERS.get("email"))
 
     USERNAME_FIELD = "email"

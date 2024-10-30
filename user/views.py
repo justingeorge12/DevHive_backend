@@ -18,10 +18,10 @@ from .signal import generate_otp, send_otp_email
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import serializers
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, DestroyAPIView
 
-from QA.serializer import QuestionSerializer, AnswerSerializer
-from QA.models import Question, Answers
+from QA.serializer import QuestionSerializer, AnswerSerializer, SavedQuestionSerializer
+from QA.models import Question, Answers, SavedQuestion
 
 from .utils import register_social_user
 
@@ -188,21 +188,31 @@ class UserAnswerView(ListAPIView):
     def get_queryset(self):
         return Answers.objects.filter(user=self.request.user)
     
-# class UserSavedView(ListAPIView):
+# class UserSavedView(APIView):
+#     def get(self, request):
+#         user = self.request.user
+#         saved_questions = SavedQuestion.objects.filter(user__id=user.id)
+        
+#         serializer = SavedQuestionSerializer(saved_questions, many=True)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class UserSavedView(ListAPIView):
+    serializer_class = SavedQuestionSerializer
 
+    def get_queryset(self):
+        user = self.request.user
+        return SavedQuestion.objects.filter(user_id=user.id)
 
 class UserProfileUpdateView(RetrieveUpdateAPIView):
     queryset = Users.objects.all()
     serializer_class = UserSerializer
 
     def get_object(self):
-        print(self.request.user)
         return self.request.user 
     
     def update(self, request, *args, **kwargs):
-        print("Request data:", request.data)  # Print request data for debugging
-        partial = kwargs.pop('partial', True)  # Allow partial updates
+        print("Request data:", request.data) 
+        partial = kwargs.pop('partial', True)  
         instance = self.get_object()
         if request.data.get('remove_image') == 'true':
             instance.profile.delete(save=False)
@@ -253,7 +263,40 @@ class ChangePassword(APIView):
 
 
 
-    
+class UserQuestionAnswerView(ListAPIView):
+    serializer_class = AnswerSerializer
+    def get_queryset(self):
+        question_id = self.kwargs.get('id')
+        print(question_id,'qustionnnnnnnnnnnnnid ')
+        return  Answers.objects.filter(question_id=question_id)
+
+
+
+class DeleteUserQuestion(DestroyAPIView):
+    queryset = Question.objects.all()
+    lookup_field = 'id'
+
+    def delete(self, request, *args, **kwargs):
+        question_id = kwargs.get('id')
+        print(f"Deleting question with ID: {question_id}")
+        return super().delete(request, *args, **kwargs)
+ 
+
+
+
+class QuestionUpdateView(RetrieveUpdateAPIView):
+    queryset = Question.objects.all()
+    serializer_class = QuestionSerializer
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user)  # Restrict editing to question owner
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+
+
 
 
 

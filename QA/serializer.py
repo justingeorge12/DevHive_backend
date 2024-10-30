@@ -34,7 +34,19 @@ class QuestionSerializer(serializers.ModelSerializer):
             QuestionTag.objects.create(question=question, tag=tag)
 
         return question  
+    
 
+    def update(self, instance, validated_data):
+        tags_data = validated_data.pop('tags', [])
+        instance.title = validated_data.get('title', instance.title)
+        instance.body = validated_data.get('body', instance.body)
+        instance.save()
+
+        existing_tags = set(instance.tags.all())
+        new_tags = {Tag.objects.get_or_create(name=tag.name)[0] for tag in tags_data}
+        
+        instance.tags.set(existing_tags.union(new_tags))
+        return instance
 
 class QuestionTagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -67,7 +79,11 @@ class AnswerSerializer(serializers.ModelSerializer):
 
 
 
-
+class SavedQuestionSerializer(serializers.ModelSerializer):
+    question = QuestionSerializer()
+    class Meta:
+        model = SavedQuestion
+        fields = ['id', 'question']
 
 
 

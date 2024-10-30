@@ -22,8 +22,12 @@ urlpatterns = [
 
     path('userquestion', UserQuestionView.as_view(), name='userquestion'),
     path('useranswer', UserAnswerView.as_view(), name='useranswer'),
+    path('usersaved', UserSavedView.as_view(), name='usersaved'),
+    path('userquestionanswer/<int:id>/', UserQuestionAnswerView.as_view(), name='userquestionanswer'),
     path('updateuserprofile', UserProfileUpdateView.as_view(), name='updateuserprofile'),
     path('changepassword', ChangePassword.as_view(), name='changepassword'),
+    path('deleteuserquestion/<int:id>', DeleteUserQuestion.as_view(), name='deleteuserquestion'),
+    path('updatequestion/<int:id>', QuestionUpdateView.as_view(), name='updatequestion'),
 
     path('google', GoogleSignInView.as_view(), name='google'),
 

@@ -1,13 +1,13 @@
 from rest_framework import serializers
 from .models import Users
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
+from rest_framework.exceptions import ValidationError
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
-        fields = ["id", "username", "email", "password", "bio", "skill", "phone", "is_verified", "date_of_join", "coins", "location", "total_votes", "profile", "first_name" ]
+        fields = ["id", "username", "email", "password", "bio", "skill", "phone", "is_verified", "is_blocked", "date_of_join", "coins", "location", "total_votes", "profile", "first_name" ]
         extra_kwargs = {"password" : {"write_only":True}}
 
     def create(self, validated_data):
@@ -40,6 +40,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
+
+        if self.user.is_blocked:
+            raise ValidationError(
+                {"detail": "This account is blocked and cannot log in.", "status": "blocked_account"}
+            )
         
         if self.user.is_superuser:
             role = 'admin'

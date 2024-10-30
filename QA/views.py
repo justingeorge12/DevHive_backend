@@ -11,13 +11,31 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view
 
 class QuestionListCreateAPIView(generics.ListCreateAPIView):
-    queryset = Question.objects.all()
+    queryset = Question.objects.all().order_by('-pos_vote')
     serializer_class = QuestionSerializer  
+
+
+    def get_queryset(self):
+        filter_option = self.request.query_params.get('filter', 'votes')  
+
+        
+        if filter_option == 'newest':
+            return Question.objects.all().order_by('-created')
+        elif filter_option == 'alphabet':
+            return Question.objects.all().order_by('title')
+        if filter_option == 'answered':
+            return Question.objects.filter(answer_count__gt=0).order_by('-created')
+        elif filter_option == 'unanswered':
+            return Question.objects.filter(answer_count=0).order_by('-created')
+        elif filter_option == 'accepted':
+            return Question.objects.filter(accepted=True).order_by('-created')
+        else:
+            return Question.objects.all().order_by('-pos_vote')
+        
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['request'] = self.request
-        print(context, 'cooooooooooooooooooooooooooooooooooooo')
         return context 
     
     def perform_create(self, serializer):
@@ -53,9 +71,9 @@ class AnswerListCreateAPIView(generics.ListCreateAPIView):
         question.answer_count += 1
         question.save()
 
-        user = self.request.user
-        user.coins += 10 
-        user.save()
+        # user = self.request.user
+        # user.coins += 10 
+        # user.save()
 
     def get_queryset(self):
         question_id = self.request.query_params.get('question_id', None)
@@ -73,7 +91,10 @@ def handle_vote(request):
     vote_type = request.data.get('vote_type')
 
     question = Question.objects.get(id = question_id)
-    print(question_id, '---------------------------------------------------------------')
+
+    if question.user == user:
+        return Response({'detail': "You cannot vote on your own question."}, status=403)
+
 
     vote = QuestionVotes.objects.filter(user=user, question=question).first()
 
@@ -82,6 +103,7 @@ def handle_vote(request):
             vote.delete()
             if vote_type == 'upvote':
                 question.pos_vote -= 1
+                question.user.coins -= 2
             elif vote_type == 'downvote':
                 question.neg_vote -= 1
         
@@ -90,15 +112,21 @@ def handle_vote(request):
             vote.save()
             if vote_type == 'upvote':
                 question.pos_vote += 1
+                question.neg_vote -= 1
+                question.user.coins += 2
             elif vote_type == 'downvote':
                 question.neg_vote += 1
+                question.pos_vote -= 1
+                question.user.coins -= 2
     else:
         QuestionVotes.objects.create(user=user, question=question, vote_type= vote_type)
         if vote_type == 'upvote':
             question.pos_vote += 1
+            question.user.coins += 2
         elif vote_type == 'downvote':
             question.neg_vote += 1
     question.save()
+    question.user.save()
 
     upvotes = QuestionVotes.objects.filter(question=question, vote_type='upvote').count()
     downvotes = QuestionVotes.objects.filter(question=question, vote_type='downvote').count()
