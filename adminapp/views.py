@@ -6,6 +6,7 @@ from .models import *
 from .serializer import TagSerializer, UserRetriUpdate
 from rest_framework import viewsets
 from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView
+from rest_framework import filters
 
 from user.models import Users
 from user.serializers import UserSerializer
@@ -18,15 +19,30 @@ from QA.models import Question, Answers
 # Create your views here.
 
 class ManageTag(viewsets.ModelViewSet):
-    queryset = Tag.objects.all().order_by('-id')
+    # queryset = Tag.objects.all().order_by('-id')
     serializer_class = TagSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+
+    def get_queryset(self):
+        queryset = Tag.objects.all().order_by('-id')
+        search = self.request.query_params.get('search', None)
+
+        if search:
+            queryset = queryset.filter(name__icontains=search)
+        return queryset
+    
 
 
 class UserList(ListAPIView):
-    queryset = Users.objects.all()
+    # queryset = Users.objects.all()
     serializer_class = UserRetriUpdate
     def get_queryset(self):
-        return Users.objects.filter(is_superuser=False).order_by('-id')
+        queryset = Users.objects.filter(is_superuser=False).order_by('-id')
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(username__icontains=search)
+        return queryset
 
 class UserManage(RetrieveUpdateAPIView):
     queryset = Users.objects.all().order_by('-id')
@@ -39,8 +55,13 @@ class ListQuestions(ListAPIView):
     serializer_class = QuestionSerializer
 
     def get_queryset(self):
-        return Question.objects.all().order_by('-id')
-    
+        queryset =  Question.objects.all().order_by('-id')
+        search = self.request.query_params.get('search', None)
+
+        if search:
+            queryset = queryset.filter(title__icontains=search)
+
+        return queryset
 
 class ListAnswers(ListAPIView):
     serializer_class = AnswerSerializer

@@ -9,10 +9,12 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
+from .pagination import InfiniteScrollPagination
 
 class QuestionListCreateAPIView(generics.ListCreateAPIView):
     queryset = Question.objects.all().order_by('-pos_vote')
     serializer_class = QuestionSerializer  
+    pagination_class = InfiniteScrollPagination
 
 
     def get_queryset(self):
