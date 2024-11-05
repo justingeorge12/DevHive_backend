@@ -30,7 +30,7 @@ class Answers(models.Model):
     pos_vote = models.IntegerField(default=0)
     neg_vote = models.IntegerField(default=0)
     created = models.DateField(auto_now_add=True)
-    accepted = models.IntegerField(default=False)
+    accepted = models.BooleanField(default=False)
     user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='answer')
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
 
@@ -50,4 +50,25 @@ class QuestionVotes(models.Model):
 
 class SavedQuestion(models.Model):
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+
+
+class AnswerVotes(models.Model):
+    UPVOTE = 'upvote'
+    DOWNVOTE = 'downvote'
+    NONE = 'none'
+
+    VOTE_CHOICES = [
+        (UPVOTE, 'Upvote'),(DOWNVOTE, 'Downvote'),(NONE, 'None'),
+    ]
+
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    answer = models.ForeignKey(Answers, on_delete=models.CASCADE)
+    vote_type = models.CharField( max_length=10, choices=VOTE_CHOICES, default=NONE)
+
+
+
+class SavedAnswer(models.Model):
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    answer = models.ForeignKey(Answers, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)

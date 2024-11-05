@@ -51,7 +51,6 @@ class QuestionRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView
     lookup_field = 'id'
 
 class ListTags(generics.ListAPIView):
-    # permission_classes = [AllowAny]
     serializer_class = TagSerializer
     
     def get_queryset(self):
@@ -83,7 +82,7 @@ class AnswerListCreateAPIView(generics.ListCreateAPIView):
         if question_id is None:
             raise ValidationError({'detail': 'question id is required'})
         
-        return Answers.objects.filter(question_id=question_id) 
+        return Answers.objects.filter(question_id=question_id).order_by('-pos_vote')
 
 
 @api_view(['POST'])
@@ -106,8 +105,10 @@ def handle_vote(request):
             if vote_type == 'upvote':
                 question.pos_vote -= 1
                 question.user.coins -= 2
+                question.user.total_votes -= 1
             elif vote_type == 'downvote':
                 question.neg_vote -= 1
+                question.user.total_votes += 1
         
         else:
             vote.vote_type = vote_type
@@ -116,24 +117,31 @@ def handle_vote(request):
                 question.pos_vote += 1
                 question.neg_vote -= 1
                 question.user.coins += 2
+                question.user.total_votes += 2
             elif vote_type == 'downvote':
                 question.neg_vote += 1
                 question.pos_vote -= 1
                 question.user.coins -= 2
+                question.user.total_votes -= 2
     else:
         QuestionVotes.objects.create(user=user, question=question, vote_type= vote_type)
         if vote_type == 'upvote':
             question.pos_vote += 1
             question.user.coins += 2
+            question.user.total_votes += 1
+            print(question.user, '...........', question.user.total_votes)
+
         elif vote_type == 'downvote':
             question.neg_vote += 1
+            question.user.total_votes -= 1
+            print(question.user, '...........', question.user.total_votes)
     question.save()
     question.user.save()
 
     upvotes = QuestionVotes.objects.filter(question=question, vote_type='upvote').count()
     downvotes = QuestionVotes.objects.filter(question=question, vote_type='downvote').count()
-
-    return Response({'upvotes': upvotes, 'downvotes': downvotes, 'user_vote': vote_type })
+    votedQuestion = Question.objects.get(id = question_id)
+    return Response({'upvotes': upvotes, 'downvotes': downvotes, 'user_vote': vote_type, 'tot_posvote':votedQuestion.pos_vote, 'tot_negvote':votedQuestion.neg_vote})
 
 
 @api_view(['POST'])
@@ -149,3 +157,83 @@ def handleSave(request):
         return Response('your qustion is saved successfully ')
     else:
         return Response('you are already saved this question')
+
+
+
+
+
+@api_view(['POST'])
+def handle_answer_vote(request):
+    user = request.user
+    answer_id = request.data.get('answer_id')
+    vote_type = request.data.get('vote_type')
+
+    answer = Answers.objects.get(id = answer_id)
+
+    if answer.user == user:
+        return Response({'detail': "You cannot vote on your own answer."}, status=403)
+
+
+    vote = AnswerVotes.objects.filter(user=user, answer=answer).first()
+
+    if vote:
+        if vote.vote_type == vote_type:
+            vote.delete()
+            if vote_type == 'upvote':
+                answer.pos_vote -= 1
+                answer.user.coins -= 2
+                answer.user.total_votes -= 1
+            elif vote_type == 'downvote':
+                answer.neg_vote -= 1
+                answer.user.total_votes += 1
+        
+        else:
+            vote.vote_type = vote_type
+            vote.save()
+            if vote_type == 'upvote':
+                answer.pos_vote += 1
+                answer.neg_vote -= 1
+                answer.user.coins += 2
+                answer.user.total_votes += 2
+            elif vote_type == 'downvote':
+                answer.neg_vote += 1
+                answer.pos_vote -= 1
+                answer.user.coins -= 2
+                answer.user.total_votes -= 2
+    else:
+        AnswerVotes.objects.create(user=user, answer=answer, vote_type= vote_type)
+        if vote_type == 'upvote':
+            answer.pos_vote += 1
+            answer.user.coins += 2
+            answer.user.total_votes += 1
+        elif vote_type == 'downvote':
+            answer.neg_vote += 1
+            answer.user.total_votes -= 1
+    answer.save()
+    answer.user.save()
+
+    upvotes = AnswerVotes.objects.filter(answer=answer, vote_type='upvote').count()
+    downvotes = AnswerVotes.objects.filter(answer=answer, vote_type='downvote').count()
+
+    votedAnswer = Answers.objects.get(id=answer_id)
+
+    return Response({'upvotes': upvotes, 'downvotes': downvotes, 'user_vote': vote_type, 'pos_vote':votedAnswer.pos_vote, 'neg_vote':votedAnswer.neg_vote })
+
+
+
+
+@api_view(['POST'])
+def handleAnswerSave(request):
+    user = request.user
+    question_id = request.data.get('question_id')
+    answer_id = request.data.get('answer_id')
+    answer = Answers.objects.get(id = answer_id)
+    question = Question.objects.get(id = question_id)
+
+    saved = SavedAnswer.objects.filter(user=user, answer = answer, question = question)
+
+    if not saved:
+        SavedAnswer.objects.create(user=user, answer=answer, question=question)
+        return Response('your answer is saved successfully ')
+    else:
+        return Response('you are already saved this answer')

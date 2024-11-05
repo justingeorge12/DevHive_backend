@@ -1,0 +1,59 @@
+
+
+<!-- otp_email_template.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your OTP Code</title>
+    <style>
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            color: #333;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            background-color: #007bff;
+            color: #ffffff;
+            padding: 10px 0;
+            border-radius: 8px 8px 0 0;
+        }
+        .otp {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Your OTP Code</h2>
+        </div>
+        <p>Dear {{ username }},</p>
+        <p>Thank you for signing up! Here is your One-Time Password (OTP) for account verification:</p>
+        <p class="otp">{{ otp }}</p>
+        <p>Please enter this code on the verification page to complete your registration.</p>
+        <p>Best regards,<br>DevHive</p>
+        <div class="footer">
+            <p>&copy; {{ year }} DevHive. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+
+
+

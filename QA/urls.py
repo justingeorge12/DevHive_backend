@@ -9,5 +9,8 @@ urlpatterns = [
     path('addlistanswer', AnswerListCreateAPIView.as_view(), name='addlistanswer'),
     path('managequesvote', handle_vote, name='managequesvote'),
     path('savequestion', handleSave, name='savequestion'),
+    path('manageanswervote', handle_answer_vote, name='manageanswervote'),
+    path('saveanswer', handleAnswerSave, name='savequestion'),
+
     
 ]

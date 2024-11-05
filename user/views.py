@@ -61,7 +61,7 @@ class ResendOtpView(APIView):
         user.otp = otp
         user.save()
 
-        send_otp_email(email, otp)
+        send_otp_email(email,user.username, otp)
 
         return Response(data='OTP resend successfull' , status=status.HTTP_200_OK)
 
@@ -120,13 +120,11 @@ class forgetPasswor(APIView):
         user.set_password(password)
         user.save()
 
-
         otp = generate_otp()
         user.otp = otp
         user.save()
 
-        send_otp_email(email, otp)
-        print('otp succesfully avvandath ahnu')
+        send_otp_email(email, user.username, otp)
         return Response(data='password has changed', status=status.HTTP_200_OK)
     
 
@@ -179,7 +177,7 @@ class UserQuestionView(ListAPIView):
     serializer_class = QuestionSerializer
 
     def get_queryset(self):
-        return Question.objects.filter(user=self.request.user)
+        return Question.objects.filter(user=self.request.user).order_by('-created')
     
 
 class UserAnswerView(ListAPIView):
@@ -267,7 +265,6 @@ class UserQuestionAnswerView(ListAPIView):
     serializer_class = AnswerSerializer
     def get_queryset(self):
         question_id = self.kwargs.get('id')
-        print(question_id,'qustionnnnnnnnnnnnnid ')
         return  Answers.objects.filter(question_id=question_id)
 
 
@@ -278,7 +275,6 @@ class DeleteUserQuestion(DestroyAPIView):
 
     def delete(self, request, *args, **kwargs):
         question_id = kwargs.get('id')
-        print(f"Deleting question with ID: {question_id}")
         return super().delete(request, *args, **kwargs)
  
 
@@ -293,6 +289,11 @@ class QuestionUpdateView(RetrieveUpdateAPIView):
         return super().get_queryset().filter(user=self.request.user)  # Restrict editing to question owner
 
     def perform_update(self, serializer):
+        question_id = self.kwargs.get('id')
+        closed_status = self.request.data.get('closed')
+        if closed_status:
+            serializer.save(closed = closed_status)
+            return
         serializer.save()
 
 

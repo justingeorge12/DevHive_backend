@@ -36,17 +36,39 @@ class QuestionSerializer(serializers.ModelSerializer):
         return question  
     
 
-    def update(self, instance, validated_data):
-        tags_data = validated_data.pop('tags', [])
-        instance.title = validated_data.get('title', instance.title)
-        instance.body = validated_data.get('body', instance.body)
-        instance.save()
+    # def update(self, instance, validated_data):
+    #     tags_data = validated_data.pop('tags', [])
+    #     instance.title = validated_data.get('title', instance.title)
+    #     instance.body = validated_data.get('body', instance.body)
+    #     instance.save()
 
-        existing_tags = set(instance.tags.all())
-        new_tags = {Tag.objects.get_or_create(name=tag.name)[0] for tag in tags_data}
+    #     existing_tags = set(instance.tags.all())
+    #     new_tags = {Tag.objects.get_or_create(name=tag.name)[0] for tag in tags_data}
         
-        instance.tags.set(existing_tags.union(new_tags))
+    #     instance.tags.set(existing_tags.union(new_tags))
+    #     return instance
+
+
+
+
+    def update(self, instance, validated_data):
+        # Update instance attributes based on validated_data
+        for attr, value in validated_data.items():
+            if attr == 'tags':
+                # Handle tags separately
+                tags_data = value
+                existing_tags = set(instance.tags.all())
+                new_tags = {Tag.objects.get_or_create(name=tag.name)[0] for tag in tags_data}
+                instance.tags.set(existing_tags.union(new_tags))
+            else:
+                # For other fields, update directly
+                setattr(instance, attr, value)
+        
+        instance.save()
         return instance
+
+
+
 
 class QuestionTagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -60,14 +82,19 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class AnswerSerializer(serializers.ModelSerializer):
+    user = ListUsersSeralizer(read_only = True)
+    is_acceptable = serializers.SerializerMethodField()
     class Meta:
         model = Answers
-        fields = ['id', 'body', 'pos_vote', 'neg_vote', 'user', 'question']
+        fields = ['id', 'body', 'pos_vote', 'neg_vote', 'user', 'question', 'accepted', 'is_acceptable']
 
         extra_kwargs = {
             'user': {'read_only': True}
 
         }
+
+    def get_is_acceptable(self, obj):
+        return obj.user != obj.question.user
 
     # def validate(self, data):
     #     request = self.context.get('request')
