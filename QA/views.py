@@ -82,7 +82,7 @@ class AnswerListCreateAPIView(generics.ListCreateAPIView):
         if question_id is None:
             raise ValidationError({'detail': 'question id is required'})
         
-        return Answers.objects.filter(question_id=question_id).order_by('-pos_vote')
+        return Answers.objects.filter(question_id=question_id).order_by('accepted').order_by('-pos_vote')
 
 
 @api_view(['POST'])

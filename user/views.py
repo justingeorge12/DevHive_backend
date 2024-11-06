@@ -24,6 +24,17 @@ from QA.serializer import QuestionSerializer, AnswerSerializer, SavedQuestionSer
 from QA.models import Question, Answers, SavedQuestion
 
 from .utils import register_social_user
+from django.shortcuts import get_object_or_404
+
+
+
+
+
+
+
+
+
+
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -298,7 +309,39 @@ class QuestionUpdateView(RetrieveUpdateAPIView):
 
 
 
+class AcceptAnswerView(APIView):
 
+    def post(self, request, question_id, answer_id):
+        question = get_object_or_404(Question, id=question_id)
+        answer = get_object_or_404(Answers, id=answer_id, question=question)
+
+        accept = request.data.get('accept', None)
+
+        if accept is None:
+            return Response({"error": "'accept' field is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        if question.user != request.user:
+            return Response({"error":'you are not the owner of this question'}, status=status.HTTP_403_FORBIDDEN)
+
+        if answer.user == question.user:
+            return Response({"error": 'you cannot accept for your own question'})
+
+        if question.accepted:
+            if accept == False:
+                answer.accepted = False
+                question.accepted = False
+                answer.save()
+                question.save()
+                return Response({"message":'answer acceptance is removed'}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": 'this question has already another accepted answer'})
+        else:
+            answer.accepted = True
+            question.accepted = True
+            answer.save()
+            question.save() 
+            return Response({"message": 'Answer acceptance status updated successfully'}, status=status.HTTP_200_OK)
 
 
 

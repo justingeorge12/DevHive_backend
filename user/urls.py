@@ -28,6 +28,7 @@ urlpatterns = [
     path('changepassword', ChangePassword.as_view(), name='changepassword'),
     path('deleteuserquestion/<int:id>', DeleteUserQuestion.as_view(), name='deleteuserquestion'),
     path('updatequestion/<int:id>', QuestionUpdateView.as_view(), name='updatequestion'),
+    path('acceptanswer/<int:question_id>/<int:answer_id>', AcceptAnswerView.as_view(), name='acceptanswer'),
 
     path('google', GoogleSignInView.as_view(), name='google'),
 
