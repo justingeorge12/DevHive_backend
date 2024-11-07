@@ -1,0 +1,36 @@
+services:
+  backend:
+    build: .
+    command: ["gunicorn", "--bind", ":8000", "backend.wsgi:application"]
+    volumes:
+      - .:/app
+      - media_volume:/app/media/
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:  # Add this line
+      - backend-network  # Add this line
+
+  db:
+    image: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    ports:
+      - "5432:5432"
+    networks:
+      - backend-network
+
+volumes:
+  db_data:
+  media_volume:
+
+networks:
+  backend-network:
+    driver: bridge

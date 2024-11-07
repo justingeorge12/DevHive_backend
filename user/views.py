@@ -325,7 +325,7 @@ class AcceptAnswerView(APIView):
             return Response({"error":'you are not the owner of this question'}, status=status.HTTP_403_FORBIDDEN)
 
         if answer.user == question.user:
-            return Response({"error": 'you cannot accept for your own question'})
+            return Response({"error": 'you cannot accept for your own question'}) 
 
         if question.accepted:
             if accept == False:
