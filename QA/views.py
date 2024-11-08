@@ -22,7 +22,8 @@ class QuestionListCreateAPIView(generics.ListCreateAPIView):
 
         
         if filter_option == 'newest':
-            return Question.objects.all().order_by('-created')
+            print('it came hereeeeeeeeeeeeeeeeeee-----------------------------------------------------------------------')
+            return Question.objects.all().order_by('-id') 
         elif filter_option == 'alphabet':
             return Question.objects.all().order_by('title')
         if filter_option == 'answered':
