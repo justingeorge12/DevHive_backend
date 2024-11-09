@@ -59,6 +59,9 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
 
+    # 'django-elasticsearch-dsl', 
+    'django_elasticsearch_dsl',
+
 ]
 
 
@@ -168,6 +171,15 @@ DATABASES = {
         'PORT': os.getenv('DATABASE_PORT', '5432'),
     }
 }
+
+
+# ElasticSearch settings
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'http://elasticsearch:9200'  # Host should match the docker container name for networking.
+    },
+}
+
 
 
 AUTH_USER_MODEL = 'user.Users'

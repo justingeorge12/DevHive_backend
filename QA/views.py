@@ -1,6 +1,8 @@
 from django.shortcuts import render
+from django.http import JsonResponse
+from django.db.models import Case, When, Value, IntegerField
 
-from rest_framework import generics
+from rest_framework import generics, status
 from .models import Question
 from .serializer import *
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -9,7 +11,10 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from .pagination import InfiniteScrollPagination
+from .documents import QuestionDocument
+
 
 class QuestionListCreateAPIView(generics.ListCreateAPIView):
     queryset = Question.objects.all().order_by('-pos_vote')
@@ -238,3 +243,54 @@ def handleAnswerSave(request):
         return Response('your answer is saved successfully ')
     else:
         return Response('you are already saved this answer')
+
+
+# def SearchQuestions(request):
+#     query = request.GET.get('q')
+#     if query:
+#         questions = QuestionDocument.search().query("multi_match", query=query, fields=['title'])
+#         results = questions.to_queryset()
+#         print(results, '--------------------------------------------------------------------------------------')
+#     else:
+#         results = Question.objects.none()
+#     return JsonResponse({"results": list(results.values('id','title', 'body', 'created', 'pos_vote', 'neg_vote', 'user', 'accepted', 'answer_count', 'tags', 'closed'))})
+
+
+def SearchQuestions(request):
+    query = request.GET.get('q')
+    
+    if query:
+        questions = QuestionDocument.search().query("multi_match", query=query, fields=['title'])
+        question_ids = [hit.meta.id for hit in questions]
+
+        ordering = Case(*[When(id=question_id, then=Value(index)) for index, question_id in enumerate(question_ids)], default=Value(len(question_ids)), output_field=IntegerField())
+        results = Question.objects.filter(id__in=question_ids).select_related('user').prefetch_related('tags').order_by(ordering)
+
+    else:
+        results = Question.objects.none()
+    
+    response_data = []
+    for question in results:
+        profile_url = request.build_absolute_uri(question.user.profile.url) if question.user.profile else None
+
+        question_data = {
+            "id": question.id,
+            "title": question.title,
+            "body": question.body,
+            "created": question.created,
+            "pos_vote": question.pos_vote,
+            "neg_vote": question.neg_vote,
+            "user": {
+                "id": question.user.id,
+                "username": question.user.username, 
+                "profile": profile_url,
+                "total_votes":question.user.total_votes
+            },
+            "accepted": question.accepted,
+            "answer_count": question.answer_count,
+            "tags": [tag.name for tag in question.tags.all()],
+            "closed": question.closed
+        }
+        response_data.append(question_data)
+    
+    return JsonResponse({"results": response_data})

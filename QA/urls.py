@@ -11,6 +11,6 @@ urlpatterns = [
     path('savequestion', handleSave, name='savequestion'),
     path('manageanswervote', handle_answer_vote, name='manageanswervote'),
     path('saveanswer', handleAnswerSave, name='savequestion'),
-
+    path('elasticsearchquestion', SearchQuestions, name='elasticsearchquestion')
     
 ]

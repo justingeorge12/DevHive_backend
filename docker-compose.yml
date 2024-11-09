@@ -11,8 +11,9 @@ services:
       - .env
     depends_on:
       - db
-    networks:  # Add this line
-      - backend-network  # Add this line
+      - elasticsearch  
+    networks:
+      - backend-network  
 
   db:
     image: postgres
@@ -27,9 +28,24 @@ services:
     networks:
       - backend-network
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"  # Elasticsearch API port
+      - "9300:9300"  # Transport port
+    networks:
+      - backend-network
+    volumes:
+      - es_data:/usr/share/elasticsearch/data 
+
 volumes:
   db_data:
   media_volume:
+  es_data:
 
 networks:
   backend-network:
