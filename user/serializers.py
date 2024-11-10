@@ -56,15 +56,3 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         
         return data
 
-
-class ChangePasswordSerializer(serializers.Serializer):
-    current_password = serializers.CharField(required = True)
-    new_password = serializers.CharField(required = True)
-    print(current_password)
-    print(new_password)
-
-    def validate_current_password(self, value):
-        user = self.context['request'].user
-        if not user.check_password(value):
-            raise serializers.ValidationError("Current password is incorrect.")
-        return value

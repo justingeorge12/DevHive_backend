@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.generics import RetrieveUpdateAPIView, GenericAPIView
-from .serializers import UserSerializer, ListUsersSeralizer, ChangePasswordSerializer, CustomTokenObtainPairSerializer
+from .serializers import UserSerializer, ListUsersSeralizer,  CustomTokenObtainPairSerializer
 from .SocialSerializer.socialserializer import GoogleSignInSerializer
 # from rest_framework import filters
 # from rest_framework.filters import OrderingFilter
@@ -170,71 +170,6 @@ class ListTags(ReadOnlyModelViewSet):
 
 
 
-class UserProfile(viewsets.ModelViewSet):
-    """
-        view set for managing user profile
-    """
-    
-    queryset = Users.objects.all()
-    serializer_class = UserSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        return Users.objects.filter(id = user.id)
-    
-
-
-class UserQuestionView(ListAPIView):
-    serializer_class = QuestionSerializer
-
-    def get_queryset(self):
-        return Question.objects.filter(user=self.request.user).order_by('-created')
-    
-
-class UserAnswerView(ListAPIView):
-    serializer_class = AnswerSerializer
-
-    def get_queryset(self):
-        return Answers.objects.filter(user=self.request.user)
-    
-# class UserSavedView(APIView):
-#     def get(self, request):
-#         user = self.request.user
-#         saved_questions = SavedQuestion.objects.filter(user__id=user.id)
-        
-#         serializer = SavedQuestionSerializer(saved_questions, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-
-class UserSavedView(ListAPIView):
-    serializer_class = SavedQuestionSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        return SavedQuestion.objects.filter(user_id=user.id)
-
-class UserProfileUpdateView(RetrieveUpdateAPIView):
-    queryset = Users.objects.all()
-    serializer_class = UserSerializer
-
-    def get_object(self):
-        return self.request.user 
-    
-    def update(self, request, *args, **kwargs):
-        print("Request data:", request.data) 
-        partial = kwargs.pop('partial', True)  
-        instance = self.get_object()
-        if request.data.get('remove_image') == 'true':
-            instance.profile.delete(save=False)
-            instance.profile = None            
-
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-
 class GoogleSignInView(GenericAPIView):
     serializer_class=GoogleSignInSerializer
     permission_classes = [AllowAny]
@@ -259,24 +194,7 @@ class GoogleSignInView(GenericAPIView):
 
 
 
-class ChangePassword(APIView):
 
-    def post(self, request, *args, **kwargs):
-        serializer = ChangePasswordSerializer(data = request.data , context = {'request':request})
-        serializer.is_valid(raise_exception=True)
-
-        request.user.set_password(serializer.validated_data['new_password'])
-        request.user.save()
-
-        return Response({'detail': 'change password succesfull'}, status=status.HTTP_200_OK )
-
-
-
-class UserQuestionAnswerView(ListAPIView):
-    serializer_class = AnswerSerializer
-    def get_queryset(self):
-        question_id = self.kwargs.get('id')
-        return  Answers.objects.filter(question_id=question_id)
 
 
 

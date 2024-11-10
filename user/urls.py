@@ -7,7 +7,6 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(r'listusers',ListUsers, basename='listuser')
 router.register(r'listtags',ListTags, basename='listtags')
-router.register(r'userprofile', UserProfile, basename='userprofile')
 
 urlpatterns = [
 
@@ -20,12 +19,6 @@ urlpatterns = [
     path('forgetpass', forgetPasswor.as_view(), name='forgetpass'),
     path('logout',Logout.as_view(), name='logout' ),
 
-    path('userquestion', UserQuestionView.as_view(), name='userquestion'),
-    path('useranswer', UserAnswerView.as_view(), name='useranswer'),
-    path('usersaved', UserSavedView.as_view(), name='usersaved'),
-    path('userquestionanswer/<int:id>/', UserQuestionAnswerView.as_view(), name='userquestionanswer'),
-    path('updateuserprofile', UserProfileUpdateView.as_view(), name='updateuserprofile'),
-    path('changepassword', ChangePassword.as_view(), name='changepassword'),
     path('deleteuserquestion/<int:id>', DeleteUserQuestion.as_view(), name='deleteuserquestion'),
     path('updatequestion/<int:id>', QuestionUpdateView.as_view(), name='updatequestion'),
     path('acceptanswer/<int:question_id>/<int:answer_id>', AcceptAnswerView.as_view(), name='acceptanswer'),

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from userprofile.models import Follow
 
 # Create your models here.
 
@@ -45,6 +46,22 @@ class Users(AbstractUser):
     total_votes = models.IntegerField(default=0)
     is_blocked = models.BooleanField(default=False)
     auth_provider = models.CharField(max_length=50, default=AUTH_PROVIDERS.get("email"))
+
+    def follow(self, user):
+        if not self.is_following(user):
+            Follow.objects.create(follower=self, following=user)
+
+    def unfollow(self, user):
+        Follow.objects.filter(follower=self, following=user).delete()
+
+    def is_following(self, user):
+        return Follow.objects.filter(follower=self, following=user).exists()
+
+    def followers_count(self):
+        return self.followers.count()
+
+    def following_count(self):
+        return self.following.count()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username",]

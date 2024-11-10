@@ -10,6 +10,7 @@ urlpatterns = [
     path('',include('user.urls')),
     path('', include('adminapp.urls')),
     path('', include('QA.urls')),
+    path('', include('userprofile.urls')),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
