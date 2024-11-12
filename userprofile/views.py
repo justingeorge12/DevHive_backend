@@ -103,6 +103,8 @@ class UserQuestionAnswerView(ListAPIView):
 class FollowUserView(APIView):
 
     def post(self, request, user_id):
+        if request.user.id == user_id:
+            return Response({"error": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
         try:
             user_to_follow = Users.objects.get(id=user_id)
             request.user.follow(user_to_follow)
@@ -123,7 +125,7 @@ class UnfollowUserView(APIView):
         
 
 class FollowersListView(ListAPIView):
-    serializer_class = FollowSerializer
+    serializer_class = FollowerSerializer
 
     def get_queryset(self):
         try:
@@ -135,7 +137,7 @@ class FollowersListView(ListAPIView):
     
 
 class FollowingListView(ListAPIView):
-    serializer_class = FollowSerializer
+    serializer_class = FollowingSerializer
 
     def get_queryset(self):
         try:
@@ -147,12 +149,42 @@ class FollowingListView(ListAPIView):
 
 
 class UserFollowCountsView(APIView):
-    def get(self, request, user_id):
-        user = get_object_or_404(Users, id=user_id)
+    def get(self, request, username=None):
+        if username:
+            user = get_object_or_404(Users, username=username) 
+        else:
+            user = request.user
         data = {
             "follower_count": user.followers_count(),
             "following_count": user.following_count()
         }
         return Response(data, status=status.HTTP_200_OK)
     
+    
+class IsFollowingView(APIView):
 
+    def get(self, request, username):
+        try:
+            target_user = Users.objects.get(username=username)
+            is_following = request.user.is_following(target_user)
+            return Response({"is_following": is_following}, status=status.HTTP_200_OK)
+        except Users.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    
+
+class OtherUserProfile(generics.RetrieveAPIView):
+    queryset = Users.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = 'username'
+    lookup_url_kwarg = 'username'
+
+    def get(self, request, *args, **kwargs):
+        try:
+            return self.retrieve(request, *args, **kwargs)
+        except NotFound:
+            return Response(
+                {"detail": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            

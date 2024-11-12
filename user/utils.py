@@ -67,9 +67,15 @@ def register_social_user(provider, email, first_name, last_name):
                 detail= f"please continue your login with {user[0].auth_provider}"
             )
     else:
+        username = first_name
+        c = 1
+        while Users.objects.filter(username=username).exists():
+            username = f"{first_name}{c}"
+            c +=1
+            
         new_user = {
             'email' : email,
-            'username' : first_name,
+            'username' : username,
             'last_name' : last_name,
             'password' : settings.SOCIAL_AUTH_PASSWORD 
         }

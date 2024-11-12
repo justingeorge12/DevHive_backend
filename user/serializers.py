@@ -8,11 +8,25 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
         fields = ["id", "username", "email", "password", "bio", "skill", "phone", "is_verified", "is_blocked", "date_of_join", "coins", "location", "total_votes", "profile", "first_name" ]
-        extra_kwargs = {"password" : {"write_only":True}}
+        extra_kwargs = {"password" : {"write_only":True},  "username": {"required": False}}
 
     def create(self, validated_data):
+
+        username = validated_data.get('first_name')
+        c = 1
+
+        while Users.objects.filter(username=username).exists():
+            username = f"{validated_data.get('first_name')}{c}"
+            c += 1
+
+        validated_data['username'] = username
+
         user = Users.objects.create_user(**validated_data)
         return user 
+    
+
+
+
     
 class ListUsersSeralizer(serializers.ModelSerializer):
     class Meta:

@@ -15,10 +15,17 @@ class ChangePasswordSerializer(serializers.Serializer):
         return value 
     
 
-class FollowSerializer(serializers.ModelSerializer):
-    follower_username = serializers.CharField(source='follower.username', read_only=True)
-    following_username = serializers.CharField(source='following.username', read_only=True)
+class FollowerSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='follower.username', read_only=True)
 
     class Meta:
         model = Follow
-        fields = ['follower', 'follower_username', 'following', 'following_username']
+        fields = ['follower', 'username']
+
+
+class FollowingSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='following.username', read_only=True)
+
+    class Meta:
+        model = Follow
+        fields = ['following', 'username']

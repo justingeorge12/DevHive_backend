@@ -32,7 +32,7 @@ class CustomUserManager(BaseUserManager):
 AUTH_PROVIDERS = {'email':'email', 'google':'google', 'github':'github', 'facebook':'facebook'}
 
 class Users(AbstractUser):
-    username = models.CharField(max_length=100)
+    username = models.CharField(max_length=100, unique=True)
     email = models.EmailField(max_length=150, unique = True)
     bio = models.TextField(blank= True)
     profile = models.ImageField(upload_to='profile/', null= True, blank=True)

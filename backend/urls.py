@@ -11,6 +11,7 @@ urlpatterns = [
     path('', include('adminapp.urls')),
     path('', include('QA.urls')),
     path('', include('userprofile.urls')),
+    path('', include('chatapp.urls')),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

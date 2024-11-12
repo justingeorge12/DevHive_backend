@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'adminapp',
     'QA',
     'userprofile',
+    'chatapp',
 
     'django.contrib.sites',
     'allauth',
