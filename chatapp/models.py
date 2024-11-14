@@ -14,3 +14,6 @@ class Chat(models.Model):
 
     def __str__(self) -> str:
         return f"{self.sender.username} to {self.receiver.username} - {self.message[:30]} "
+    
+    class Meta:
+        ordering = ['-date']

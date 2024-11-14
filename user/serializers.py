@@ -29,9 +29,16 @@ class UserSerializer(serializers.ModelSerializer):
 
     
 class ListUsersSeralizer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
     class Meta:
         model = Users
         fields = ['id', 'username','total_votes','profile', 'location']
+    
+    def get_profile(self, obj):
+        request = self.context.get('request')
+        if obj.profile and obj.profile:
+            return request.build_absolute_uri(obj.profile.url)
+        return None
 
 
 

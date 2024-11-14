@@ -153,7 +153,8 @@ class Logout(APIView):
 
 class ListUsers(ReadOnlyModelViewSet):
     queryset = Users.objects.filter(is_superuser = False).order_by('-total_votes')
-    serializer_class = ListUsersSeralizer
+    # serializer_class = ListUsersSeralizer
+    serializer_class = UserSerializer
 
     # ordering_fields = ['username', 'date_of_join', 'total_votes']
 

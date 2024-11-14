@@ -1,12 +1,15 @@
 from django.shortcuts import render
-from django.db.models import Q
+from django.db.models import Q, Max
 from .models import Chat
 from user.models import Users
 from .serializer import ChatSerializer
-from user.serializers import UserSerializer
-from rest_framework import generics
+from user.serializers import UserSerializer, ListUsersSeralizer
+from rest_framework import status, generics, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+
+
 
 
 # Create your views here.
@@ -27,7 +30,7 @@ class ChatHistorysView(generics.ListAPIView):
 
         queryset = Chat.objects.filter(thread_name=thread_name).order_by('date')
 
-        return queryset
+        return queryset 
     
 
 
@@ -49,5 +52,18 @@ class ChatUserListView(APIView):
                 user_ids.add(receiver_id)
 
         users = Users.objects.filter(id__in=user_ids)
-        serializer = UserSerializer(users, many=True)
+        
+        serializer = ListUsersSeralizer(users, many=True, context={'request': request})
         return Response(serializer.data)
+
+
+
+class specificUserDetails(APIView):
+    """
+        view set for fetch specific user detail
+    """
+    def get(self, request, user_id):
+        user = get_object_or_404(Users, id=user_id)
+        
+        serializer = ListUsersSeralizer(user, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
