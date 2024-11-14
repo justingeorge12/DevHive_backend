@@ -45,10 +45,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         else:
             role = 'user'
 
-        print(user)
+        print(user, '---------------------------------------------')
+        print(user.id, 'iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiid')
 
         token['role'] = role  
         token['is_verified'] = user.is_verified
+        token['user_id'] = user.id 
         
         return token
 
@@ -67,6 +69,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         data['role'] = role  
         data['is_verified'] = self.user.is_verified
-        
+        data['user_id'] = self.user.id
         return data
 

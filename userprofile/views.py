@@ -181,6 +181,10 @@ class OtherUserProfile(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         try:
+            user = self.request.user
+            print(user.username, args, kwargs, 'uuuuuuuuuuuussssr')
+            if user.username == kwargs['username']:
+                return Response({"detail":'Same user profile'})
             return self.retrieve(request, *args, **kwargs)
         except NotFound:
             return Response(
