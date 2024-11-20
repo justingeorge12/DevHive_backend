@@ -15,15 +15,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             self.receiver = await database_sync_to_async(Users.objects.get)(id=self.receiver_id)
         except Users.DoesNotExist:
-            print('errrrro')
             await self.close()
             return
         
         self.room_name = f"chat_{min(self.sender.id, self.receiver.id)}_{max(self.sender.id, self.receiver.id)}"
         self.room_group_name = f'chat_{self.room_name}'
-
-        print(self.room_group_name, self.room_name, 'rooooooooooooooooooooooooo')
-
 
         await self.channel_layer.group_add(
             self.room_group_name,
@@ -33,7 +29,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, code_code):
-        print('heyeyey')
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -49,7 +44,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {
                 'type': 'chat_message',
-                'message': message
+                'message': message,
+                'sender_id' : self.sender.id
             }
         )
 
@@ -62,7 +58,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     
     async def chat_message(self, event):
         message = event['message']
-
+        sender_id = event['sender_id']
         await self.send(text_data=json.dumps({
-            'message':message
+            'message':message,
+            'sender_id': sender_id,
         }))

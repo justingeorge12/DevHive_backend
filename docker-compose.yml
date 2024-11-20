@@ -11,6 +11,7 @@ services:
       - .env
     depends_on:
       - db
+      - redis
       - elasticsearch  
     networks:
       - backend-network  
@@ -27,6 +28,31 @@ services:
       - "5432:5432"
     networks:
       - backend-network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - backend-network
+
+  daphne:
+    build: .
+    command: daphne -b 0.0.0.0 -p 8001 backend.asgi:application
+    volumes:
+      - .:/app
+    ports:
+      - "8001:8001"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings
+    networks:
+      - backend-network
+
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3

@@ -6,6 +6,7 @@ from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r'tags', ManageTag, basename= 'tags')
+router.register(r'product', ProductViewSet, basename='product')
 
 urlpatterns = [
     path('', include(router.urls)), 

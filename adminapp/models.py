@@ -8,3 +8,4 @@ class Tag(models.Model):
     description = models.CharField(max_length=350)
     question_count = models.IntegerField(default=0)
     
+
