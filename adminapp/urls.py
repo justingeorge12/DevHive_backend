@@ -19,4 +19,7 @@ urlpatterns = [
     path('questindelete/<int:id>', DeleteQuestionView.as_view(), name='questindelete'),
     path('deleteanswer/<int:id>', DeleteAnswerView.as_view(), name='deleteanswer'),
     path('blockuser/<int:pk>', BlockUserView.as_view(), name='blockuser'),
+    path('orderlist', OrdersList.as_view(), name='orderlist'),
+    path('oneorderdetails/<int:id>', OrderRetriveView.as_view(), name='oneorderdetails'),
+    path('changeorderstatus/<int:id>',OrderStatusUpdateView.as_view(), name='changeorderstatus'),
 ]

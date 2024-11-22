@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics
 from .models import * 
-from .serializer import TagSerializer, UserRetriUpdate
+from .serializer import *
 from rest_framework import viewsets
 from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView
 from rest_framework import filters
@@ -15,7 +15,7 @@ from user.serializers import UserSerializer
 from QA.serializer import QuestionSerializer, AnswerSerializer
 from QA.models import Question, Answers
 
-from rewards.models import Product
+from rewards.models import *
 from rewards.serializers import ProductSerializer
 
 from .permission import IsSuperUser
@@ -31,7 +31,7 @@ class ManageTag(viewsets.ModelViewSet):
     pagination_class = AdminListPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
-    permission_classes = [AllowAny]
+    # permission_classes = [AllowAny]
 
     def get_queryset(self):
         queryset = Tag.objects.all().order_by('-id')
@@ -63,6 +63,7 @@ class UserManage(RetrieveUpdateAPIView):
 
 class ListQuestions(ListAPIView):
     serializer_class = QuestionSerializer
+    pagination_class = AdminListPagination
 
     def get_queryset(self):
         queryset =  Question.objects.all().order_by('-id')
@@ -122,6 +123,8 @@ class DeleteAnswerView(DestroyAPIView):
 class BlockUserView(UpdateAPIView):
     queryset = Users.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsSuperUser]
+
 
     def patch(self, request, *args, **kwargs):
         user = self.get_object()
@@ -135,9 +138,11 @@ class BlockUserView(UpdateAPIView):
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
+    queryset = Product.objects.all().order_by('-id')
     serializer_class = ProductSerializer
-    # permission_classes = [IsSuperUser]
+    permission_classes = [IsSuperUser]
+    pagination_class = AdminListPagination
+
 
 
     # def create(self, request, *args, **kwargs):
@@ -148,3 +153,29 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     # def perform_create(self, serializer):
     #     serializer.save()
+
+
+class OrdersList(ListAPIView):
+    queryset = Order.objects.all().order_by('order_date')
+    serializer_class = OrderListSerializer 
+    permission_classes = [IsSuperUser]
+
+
+class OrderRetriveView(RetrieveAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderListSerializer
+    lookup_field = 'id' 
+
+
+
+class OrderStatusUpdateView(UpdateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderStatusUpdateSerializer
+    permission_classes = [IsSuperUser] 
+    lookup_field = 'id'
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object() 
+        if 'status' in request.data:
+            return super().partial_update(request, *args, **kwargs)
+        return Response({"detail": "Status field is required"}, status=400)
