@@ -29,14 +29,13 @@ class ManageTag(viewsets.ModelViewSet):
     queryset = Tag.objects.all().order_by('-id')
     serializer_class = TagSerializer
     pagination_class = AdminListPagination
+    permission_classes = [IsSuperUser] 
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
-    # permission_classes = [AllowAny]
 
     def get_queryset(self):
         queryset = Tag.objects.all().order_by('-id')
         search = self.request.query_params.get('search', None)
-        print(queryset, '-----------------------------')
         if search:
             queryset = queryset.filter(name__icontains=search)
         return queryset
@@ -44,9 +43,9 @@ class ManageTag(viewsets.ModelViewSet):
 
 
 class UserList(ListAPIView):
-    # queryset = Users.objects.all()
     serializer_class = UserRetriUpdate
     pagination_class = AdminListPagination 
+    permission_classes = [IsSuperUser] 
     def get_queryset(self):
         queryset = Users.objects.filter(is_superuser=False).order_by('-id')
         search = self.request.query_params.get('search', None)
@@ -57,6 +56,7 @@ class UserList(ListAPIView):
 class UserManage(RetrieveUpdateAPIView):
     queryset = Users.objects.all().order_by('-id')
     serializer_class = UserRetriUpdate
+    permission_classes = [IsSuperUser] 
     lookup_field = 'id'
     def get_queryset(self):
         return Users.objects.filter(is_superuser=False)
@@ -64,6 +64,7 @@ class UserManage(RetrieveUpdateAPIView):
 class ListQuestions(ListAPIView):
     serializer_class = QuestionSerializer
     pagination_class = AdminListPagination
+    permission_classes = [IsSuperUser] 
 
     def get_queryset(self):
         queryset =  Question.objects.all().order_by('-id')
@@ -76,6 +77,7 @@ class ListQuestions(ListAPIView):
 
 class ListAnswers(ListAPIView):
     serializer_class = AnswerSerializer
+    permission_classes = [IsSuperUser] 
 
     def get_queryset(self):
         return Answers.objects.all()
@@ -84,11 +86,14 @@ class ListAnswers(ListAPIView):
 class AdminQuestionDetailView(RetrieveAPIView):
     queryset = Question.objects.all()
     serializer_class =  QuestionSerializer
+    permission_classes = [IsSuperUser] 
     lookup_field='id'
 
 
 class AdminQuestionAnswerView(ListAPIView):
     serializer_class = AnswerSerializer
+    permission_classes = [IsSuperUser] 
+
     def get_queryset(self):
         question_id = self.kwargs.get('id')
         return  Answers.objects.filter(question_id=question_id)
@@ -96,6 +101,7 @@ class AdminQuestionAnswerView(ListAPIView):
 
 class DeleteQuestionView(DestroyAPIView):
     queryset = Question.objects.all()
+    permission_classes = [IsSuperUser] 
     lookup_field = 'id'
 
     def delete(self, request, *args, **kwargs):
@@ -106,6 +112,7 @@ class DeleteQuestionView(DestroyAPIView):
 
 class DeleteAnswerView(DestroyAPIView):
     queryset = Answers.objects.all()
+    permission_classes = [IsSuperUser] 
     lookup_field = 'id'
 
     def delete(self, request, *args, **kwargs):

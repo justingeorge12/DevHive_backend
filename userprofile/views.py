@@ -10,6 +10,10 @@ from user.serializers import UserSerializer
 from user.models import Users
 from QA.models import *
 from QA.serializer import *
+from rewards.models import Address
+from rewards.serializers import UserAddressSerializer
+# from django_filters
+from rest_framework import filters
 
 
 
@@ -192,3 +196,23 @@ class OtherUserProfile(generics.RetrieveAPIView):
                 status=status.HTTP_404_NOT_FOUND
             )
             
+
+class AddressRetrieveUpdateView(RetrieveUpdateAPIView):
+    queryset = Address.objects.all()
+    serializer_class = UserAddressSerializer
+    lookup_field = "id" 
+
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user)
+    
+
+
+
+class SeachOtherUser(ListAPIView):
+    queryset = Users.objects.all()
+    serializer_class = UserSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['username', 'first_name']
+
+
+    

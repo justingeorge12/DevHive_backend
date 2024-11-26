@@ -63,7 +63,7 @@ class UserAddress(ListAPIView):
 
     def get_queryset(self):
         print(self.request.user)
-        return Address.objects.filter(user = self.request.user)
+        return Address.objects.filter(user = self.request.user, is_available=True)
     
 
 
