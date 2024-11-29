@@ -19,8 +19,17 @@ from user.serializers import UserSerializer
 class ProductListView(ListAPIView):
     serializer_class = ProductSerializer
 
+    
     def get_queryset(self):
-        return Product.objects.filter(is_listed=True, quantity__gt=0).order_by('coins')
+        a =  Product.objects.filter(is_listed=True, quantity__gt=0).order_by('coins')
+
+        print(a.explain(format='TEXT', analyze=True, verbose=True, timing=True, buffers=True))
+        return a
+
+
+    # def get_queryset(self):
+    #     return Product.objects.filter(is_listed=True, quantity__gt=0).order_by('coins')
+    
 
 
 class ProductRetriveView(RetrieveAPIView):

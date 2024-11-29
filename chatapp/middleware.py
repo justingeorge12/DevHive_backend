@@ -4,6 +4,7 @@ from channels.middleware import BaseMiddleware
 from channels.db import database_sync_to_async
 from rest_framework_simplejwt.tokens import AccessToken
 from django.contrib.auth import get_user_model
+from urllib.parse import parse_qs
 
 User = get_user_model()
 
@@ -19,8 +20,12 @@ def get_user_from_token(token):
 class JWTAuthMiddleware(BaseMiddleware):
     async def __call__(self, scope, receive, send):
         # Get token from query string
-        query_string = dict((x.split('=') for x in scope['query_string'].decode().split('&')))
-        token = query_string.get('token')
+        # query_string = dict((x.split('=') for x in scope['query_string'].decode().split('&')))
+        # token = query_string.get('token')
+
+        query_string = parse_qs(scope['query_string'].decode())
+        token = query_string.get('token', [None])[0]
+
 
         # Authenticate user if token exists
         if token:

@@ -21,6 +21,10 @@ from rewards.serializers import ProductSerializer
 from .permission import IsSuperUser
 from QA.pagination import AdminListPagination
 
+from chatapp.models import Notification
+
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 
 # Create your views here.
@@ -175,6 +179,22 @@ class OrderRetriveView(RetrieveAPIView):
 
 
 
+# class OrderStatusUpdateView(UpdateAPIView):
+#     queryset = Order.objects.all()
+#     serializer_class = OrderStatusUpdateSerializer
+#     permission_classes = [IsSuperUser] 
+#     lookup_field = 'id'
+
+#     def partial_update(self, request, *args, **kwargs):
+#         instance = self.get_object() 
+#         if 'status' in request.data:
+#             print(request.data)
+#             # print(request.status)
+#             return super().partial_update(request, *args, **kwargs)
+#         return Response({"detail": "Status field is required"}, status=400)
+
+
+
 class OrderStatusUpdateView(UpdateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderStatusUpdateSerializer
@@ -182,7 +202,35 @@ class OrderStatusUpdateView(UpdateAPIView):
     lookup_field = 'id'
 
     def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object() 
-        if 'status' in request.data:
-            return super().partial_update(request, *args, **kwargs)
-        return Response({"detail": "Status field is required"}, status=400)
+        instance = self.get_object()
+
+        if instance.status == 'Canceled':
+            return Response({"detail": "Cannot update an order with status 'Canceled'."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        new_status = request.data.get('status')
+        if new_status == 'Canceled':
+            if instance.product:
+                instance.product.quantity += 1
+                instance.product.save()
+
+        response = super().partial_update(request, *args, **kwargs)
+
+        self.create_notification(instance, new_status)
+
+        return response
+    
+    def create_notification(self, order, new_status):
+        notification_message = f"Your order #{order.id} status has been updated to '{new_status}'."
+
+        notification = Notification.objects.create(sender=self.request.user, receiver=order.user, notification_type='order_status', message=notification_message)
+
+        channel_layer = get_channel_layer()
+        group_name = f"user_{order.user.id}_notifications"
+
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {
+                "type": "send_notification",
+                "message": notification.message,
+            }
+        )

@@ -98,11 +98,13 @@ def handle_vote(request):
 
     question = Question.objects.get(id = question_id)
 
+
     if question.user == user:
         return Response({'detail': "You cannot vote on your own question."}, status=403)
 
 
     vote = QuestionVotes.objects.filter(user=user, question=question).first()
+
 
     if vote:
         if vote.vote_type == vote_type:

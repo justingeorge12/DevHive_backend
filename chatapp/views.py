@@ -2,12 +2,13 @@ from django.shortcuts import render
 from django.db.models import Q, Max
 from .models import Chat
 from user.models import Users
-from .serializer import ChatSerializer
+from .serializer import *
 from user.serializers import UserSerializer, ListUsersSeralizer
 from rest_framework import status, generics, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from QA.pagination import MessagePagination
 
 
 
@@ -17,6 +18,7 @@ from django.shortcuts import get_object_or_404
 
 
 class ChatHistorysView(generics.ListAPIView):
+    pagination_class = MessagePagination
     serializer_class = ChatSerializer
 
     def get_queryset(self):
@@ -28,7 +30,7 @@ class ChatHistorysView(generics.ListAPIView):
         
         thread_name = f"chat_{min(sender_id, receiver_id)}_{max(sender_id, receiver_id)}"
 
-        queryset = Chat.objects.filter(thread_name=thread_name).order_by('date')
+        queryset = Chat.objects.filter(thread_name=thread_name).order_by('-date')
 
         return queryset 
     
@@ -67,3 +69,15 @@ class specificUserDetails(APIView):
         
         serializer = ListUsersSeralizer(user, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
+
+
+class NotificationHistoryView(generics.ListAPIView):
+    serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        print(self.request.user)
+        return Notification.objects.filter(receiver = self.request.user.id).order_by('-id')
+    

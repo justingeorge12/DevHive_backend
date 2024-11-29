@@ -63,3 +63,54 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'message':message,
             'sender_id': sender_id,
         }))
+
+
+
+
+
+
+class NotificationConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        if self.scope["user"].is_authenticated:
+            self.user = self.scope["user"]
+            self.group_name = f"user_{self.user.id}_notifications"
+
+            # Add the user to a notifications group
+            try:
+            # Add the user to a notifications group
+                await self.channel_layer.group_add(
+                    self.group_name,
+                    self.channel_name
+                )
+                
+            except Exception as e:
+                print(f"Error adding channel to group: {e}")
+
+
+            await self.accept()
+        else:
+            await self.close()
+        
+        
+
+    async def disconnect(self, close_code):
+        # Leave the notifications group
+        if self.scope["user"].is_authenticated:
+            await self.channel_layer.group_discard(
+                self.group_name,
+                self.channel_name
+            )
+
+
+    async def receive(self, text_data):
+        # WebSocket message received
+        data = json.loads(text_data)
+        # Process received data if needed (e.g., mark notifications as read)
+
+    async def send_notification(self, event):
+        """Send notification to WebSocket."""
+
+        await self.send(text_data=json.dumps({
+            "type": event["type"],
+            "message": event["message"]
+        }))

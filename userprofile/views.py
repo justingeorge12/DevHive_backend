@@ -209,10 +209,17 @@ class AddressRetrieveUpdateView(RetrieveUpdateAPIView):
 
 
 class SeachOtherUser(ListAPIView):
-    queryset = Users.objects.all()
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['username', 'first_name']
 
 
-    
+    def get_queryset(self):
+        requested_user = self.request.user
+        queryset = Users.objects.exclude(id=requested_user.id).exclude(is_superuser=True)
+
+        search_param = self.request.query_params.get('search', None)
+        if search_param:
+            queryset = queryset.filter(username__istartswith=search_param) | queryset.filter(first_name__istartswith=search_param)
+
+        return queryset

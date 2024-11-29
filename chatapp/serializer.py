@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Chat
+from .models import *
 from user.models import Users
 
 class ChatSerializer(serializers.ModelSerializer):
@@ -14,4 +14,8 @@ class ChatSerializer(serializers.ModelSerializer):
 
 
 
-        
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = '__all__'

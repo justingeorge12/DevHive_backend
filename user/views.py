@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.generics import RetrieveUpdateAPIView, GenericAPIView
+from rest_framework import filters
 from .serializers import UserSerializer, ListUsersSeralizer,  CustomTokenObtainPairSerializer
 from .SocialSerializer.socialserializer import GoogleSignInSerializer
 # from rest_framework import filters
@@ -25,6 +26,7 @@ from QA.models import Question, Answers, SavedQuestion
 
 from .utils import register_social_user
 from django.shortcuts import get_object_or_404
+
 
 
 
@@ -84,9 +86,6 @@ class OtpView(APIView):
         email = request.data.get('email')
         typedOtp = request.data.get('otp')
 
-        print(email, 'check email is typedddd................')
-        print(email, typedOtp)
-
         if not email or not typedOtp:
             return Response(data='Email and Otp is required', status=status.HTTP_400_BAD_REQUEST)
         
@@ -142,7 +141,7 @@ class forgetPasswor(APIView):
 class Logout(APIView):
     def post(self, request):
         try:
-            refresh = request.data['refresh']
+            refresh = request.data['token']
             token = RefreshToken(refresh)
             token.blacklist()
             return Response(status=status.HTTP_205_RESET_CONTENT)
@@ -152,10 +151,20 @@ class Logout(APIView):
         
 
 class ListUsers(ReadOnlyModelViewSet):
-    queryset = Users.objects.filter(is_superuser = False).order_by('-total_votes')
-    # serializer_class = ListUsersSeralizer
+    # queryset = Users.objects.filter(is_superuser = False).order_by('-total_votes')
     serializer_class = UserSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['username', 'first_name']
 
+    def get_queryset(self):
+        
+        search = self.request.query_params.get('search', None)
+        
+        if search:
+            return Users.objects.filter(is_superuser=False, username__istartswith=search)
+        else:
+            return Users.objects.filter(is_superuser = False).order_by('-total_votes')
+    
     # ordering_fields = ['username', 'date_of_join', 'total_votes']
 
 

@@ -1,6 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from userprofile.models import Follow
+from chatapp.models import Notification
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 # Create your models here.
 
@@ -50,6 +54,17 @@ class Users(AbstractUser):
     def follow(self, user):
         if not self.is_following(user):
             Follow.objects.create(follower=self, following=user)
+
+            Notification.objects.create(receiver = user, sender = self, message=f"{self.username} started following you.", notification_type='follow' )
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                 f"user_{user.id}_notifications",{
+                    "type": "send_notification",
+                    "message": f"{self.username} started following you.",
+                    # "type": "follow"
+                 }
+            )
+            print(f"Message sent to group user_{user.id}_notifications")
 
     def unfollow(self, user):
         Follow.objects.filter(follower=self, following=user).delete()
