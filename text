@@ -1,0 +1,86 @@
+
+services:
+  backend:
+    image: justingeorge4/backend-backend 
+    command: ["gunicorn", "--bind", ":8000", "backend.wsgi:application"]
+    volumes:
+      - media_volume:/app/media/
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      - elasticsearch  
+    networks:
+      - backend-network  
+
+  db:
+    image: postgres
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    ports:
+      - "5432:5432"
+    networks:
+      - backend-network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - backend-network
+
+  daphne:
+    image: justingeorge4/backend-daphne 
+    command: daphne -b 0.0.0.0 -p 8001 backend.asgi:application
+    ports:
+      - "8001:8001"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings
+    networks:
+      - backend-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200" 
+      - "9300:9300"  
+    networks:
+      - backend-network
+    volumes:
+      - es_data:/usr/share/elasticsearch/data 
+
+volumes:
+  db_data:
+  media_volume:
+  es_data:
+
+networks:
+  backend-network:
+    driver: bridge
+
+
+
+
+
+
+
+
+
+

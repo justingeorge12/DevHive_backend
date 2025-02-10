@@ -16,6 +16,7 @@ urlpatterns = [
     path('usersaved', UserSavedView.as_view(), name='usersaved'),
     path('updateuserprofile', UserProfileUpdateView.as_view(), name='updateuserprofile'),
     path('userquestionanswer/<int:id>/', UserQuestionAnswerView.as_view(), name='userquestionanswer'),
+    path('useranswersdetail/<int:pk>', UserAnswerDetailView.as_view(), name='useranswersdetail'),
     path('myaddress/<int:id>',AddressRetrieveUpdateView.as_view(), name='myaddress'),
 
     path('follow/<int:user_id>', FollowUserView.as_view(), name='follow'),

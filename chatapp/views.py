@@ -11,12 +11,7 @@ from django.shortcuts import get_object_or_404
 from QA.pagination import MessagePagination
 
 
-
-
-# Create your views here.
-
-
-
+#  view to fetch chat history between two users
 class ChatHistorysView(generics.ListAPIView):
     pagination_class = MessagePagination
     serializer_class = ChatSerializer
@@ -29,15 +24,13 @@ class ChatHistorysView(generics.ListAPIView):
             return Chat.objects.none()
         
         thread_name = f"chat_{min(sender_id, receiver_id)}_{max(sender_id, receiver_id)}"
-
         queryset = Chat.objects.filter(thread_name=thread_name).order_by('-date')
-
         return queryset 
     
 
 
 
-
+# to list all users the current user has chatted with
 class ChatUserListView(APIView):
 
     def get(self, request):
@@ -59,11 +52,8 @@ class ChatUserListView(APIView):
         return Response(serializer.data)
 
 
-
+# to fetch details of a specific user by user_id
 class specificUserDetails(APIView):
-    """
-        view set for fetch specific user detail
-    """
     def get(self, request, user_id):
         user = get_object_or_404(Users, id=user_id)
         

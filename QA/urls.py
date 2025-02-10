@@ -14,3 +14,6 @@ urlpatterns = [
     path('elasticsearchquestion', SearchQuestions, name='elasticsearchquestion')
     
 ]
+
+
+

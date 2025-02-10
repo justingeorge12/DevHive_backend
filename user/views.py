@@ -9,8 +9,6 @@ from rest_framework.generics import RetrieveUpdateAPIView, GenericAPIView
 from rest_framework import filters
 from .serializers import UserSerializer, ListUsersSeralizer,  CustomTokenObtainPairSerializer
 from .SocialSerializer.socialserializer import GoogleSignInSerializer
-# from rest_framework import filters
-# from rest_framework.filters import OrderingFilter
 from .models import Users
 from adminapp.models import Tag
 from adminapp.serializer import TagSerializer
@@ -32,31 +30,22 @@ from django.shortcuts import get_object_or_404
 
 
 
-
-
-
-
-
-
-
+# for creating a new user
 class CreateUserView(generics.CreateAPIView):
     queryset = Users.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
-        print(request.data) 
         return super().create(request, *args, **kwargs)
 
 
-
-
-
-
+# Custom JWT token authentication view
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 
+# API to resend OTP for email verification
 class ResendOtpView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
@@ -79,7 +68,7 @@ class ResendOtpView(APIView):
         return Response(data='OTP resend successfull' , status=status.HTTP_200_OK)
 
 
-
+#  to verify OTP and activate the user
 class OtpView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):
@@ -106,7 +95,7 @@ class OtpView(APIView):
         else:
             return Response(data='invalid Otp ', status=status.HTTP_400_BAD_REQUEST)
         
-
+#  check if an email exist
 class getEmail(APIView):
     permission_classes = [AllowAny]
     
@@ -118,7 +107,7 @@ class getEmail(APIView):
         else:
             return Response(data='user is not exists', status=status.HTTP_404_NOT_FOUND)
         
-
+# API to reset user password
 class forgetPasswor(APIView):
     permission_classes = [AllowAny]
 
@@ -137,7 +126,7 @@ class forgetPasswor(APIView):
         send_otp_email(email, user.username, otp)
         return Response(data='password has changed', status=status.HTTP_200_OK)
     
-
+#  log out a user and blacklist token
 class Logout(APIView):
     def post(self, request):
         try:
@@ -149,15 +138,13 @@ class Logout(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         
-
+# list all users
 class ListUsers(ReadOnlyModelViewSet):
-    # queryset = Users.objects.filter(is_superuser = False).order_by('-total_votes')
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['username', 'first_name']
 
     def get_queryset(self):
-        
         search = self.request.query_params.get('search', None)
         
         if search:
@@ -165,21 +152,14 @@ class ListUsers(ReadOnlyModelViewSet):
         else:
             return Users.objects.filter(is_superuser = False).order_by('-total_votes')
     
-    # ordering_fields = ['username', 'date_of_join', 'total_votes']
-
-
-
-    # filter_backends = [filters.OrderingFilter]
-    # ordering_fields = ['total_votes', 'username', 'location']  # Allow ordering by these fields
-    # # ordering = ['-total_votes']  # Default ordering if no parameter is specified
   
-
+# list all tags
 class ListTags(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
 
-
+#  handle Google sign-in authentication
 class GoogleSignInView(GenericAPIView):
     serializer_class=GoogleSignInSerializer
     permission_classes = [AllowAny]
@@ -189,7 +169,6 @@ class GoogleSignInView(GenericAPIView):
         serializers = self.serializer_class(data=request.data)
         serializers.is_valid(raise_exception=True)
 
-        # data = ((serializers.validated_data)['access_token'])
         data = serializers.validated_data
 
 
@@ -201,13 +180,7 @@ class GoogleSignInView(GenericAPIView):
         )
         return Response(result, status=status.HTTP_200_OK)
 
-
-
-
-
-
-
-
+# delete a user’s question
 class DeleteUserQuestion(DestroyAPIView):
     queryset = Question.objects.all()
     lookup_field = 'id'
@@ -216,9 +189,7 @@ class DeleteUserQuestion(DestroyAPIView):
         question_id = kwargs.get('id')
         return super().delete(request, *args, **kwargs)
  
-
-
-
+# update a question (only the owner can edit)
 class QuestionUpdateView(RetrieveUpdateAPIView):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
@@ -236,9 +207,8 @@ class QuestionUpdateView(RetrieveUpdateAPIView):
         serializer.save()
 
 
-
+#  accept or remove acceptance of an answer
 class AcceptAnswerView(APIView):
-
     def post(self, request, question_id, answer_id):
         question = get_object_or_404(Question, id=question_id)
         answer = get_object_or_404(Answers, id=answer_id, question=question)
@@ -273,28 +243,3 @@ class AcceptAnswerView(APIView):
 
 
 
-
-
-
-
-
-
-# class HomeView(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def get(self, request):
-#         content = {'message': 'Welcome to jwt '}
-
-#         return Response(content)
-
-# class LogoutView(APIView):
-#      permission_classes = (IsAuthenticated,)
-#      def post(self, request):
-          
-#           try:
-#                refresh_token = request.data["refresh_token"]
-#                token = RefreshToken(refresh_token)
-#                token.blacklist()
-#                return Response(status=status.HTTP_205_RESET_CONTENT)
-#           except Exception as e:
-#                return Response(status=status.HTTP_400_BAD_REQUEST)

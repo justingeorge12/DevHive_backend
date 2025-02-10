@@ -119,12 +119,20 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  
+    "http://localhost:5173",
+    "https://devhive4.vercel.app",
+    "http://devhive.justingeorge.site",
+    "https://devhive.justingeorge.site",
 ]
 
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173/",
+    "http://devhive.justingeorge.site",
+    "https://devhive.justingeorge.site",
+    "https://www.devhive.justingeorge.site"
+    "https://devhive4.vercel.app"
+
 ]
 
 
@@ -140,8 +148,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=45),
-     'REFRESH_TOKEN_LIFETIME': timedelta(days=2),
+     'ACCESS_TOKEN_LIFETIME': timedelta(minutes = int(os.getenv('ACCESS_TOKEN_LIFETIME'))),
+     'REFRESH_TOKEN_LIFETIME': timedelta(days = int(os.getenv('REFRESH_TOKEN_LIFETIME'))),
      'ROTATE_REFRESH_TOKENS': True,
      'BLACKLIST_AFTER_ROTATION': False 
 }
@@ -171,13 +179,6 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 
 
 DATABASES = {
@@ -274,3 +275,22 @@ GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_SECRET')
 SOCIAL_AUTH_PASSWORD = os.getenv('SOCIAL_PASSWORD')
  
+
+
+
+
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
+
+
+
+# for pagination urls havig the https: 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True

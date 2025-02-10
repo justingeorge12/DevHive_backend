@@ -16,13 +16,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         model = Question
         fields = ['id', 'title', 'body', 'pos_vote', 'neg_vote', 'created', 'closed', 'accepted', 'answer_count', 'user', 'tags']
 
-    # def to_representation(self, instance):
-    #     """
-    #     Customize the representation of Elasticsearch documents
-    #     """
-    #     representation = super().to_representation(instance)
 
-    #     return representation
     
     def validate(self, data):
         request = self.context.get('request')
@@ -85,14 +79,6 @@ class AnswerSerializer(serializers.ModelSerializer):
     def get_is_acceptable(self, obj):
         return obj.user != obj.question.user
 
-    # def validate(self, data):
-    #     request = self.context.get('request')
-
-    #     if request and  request.user.is_anonymous:
-    #         raise serializers.ValidationError("User must be authenticated")
-
-    #     return data
-
 
 
 class SavedQuestionSerializer(serializers.ModelSerializer):
@@ -101,20 +87,3 @@ class SavedQuestionSerializer(serializers.ModelSerializer):
         model = SavedQuestion
         fields = ['id', 'question']
 
-
-
-
-
-
-
-
-
-  # def validate_tags(self, tags_data):
-    #     print(tags_data,'rqqqqqqqqqqqqssssssssssst taaaaaaaaaaaaaaaaaaaaaag -----------------')
-    #     print(tags_data, 'rqqqqqqqqqqqqqqqqqst taaaaaaaaaaaaaaaaag')
-    #     exist_tags = Tag.objects.filter(name__in=tags_data).values_list('name', flat=True) 
-    #     print(exist_tags, 'exxxxxxxxxxxxxxxxst tgsssssssss')
-    #     if len(exist_tags) != len(tags_data):
-    #         missing_tag = set(tags_data) - set(exist_tags)
-    #         raise serializers.ValidationError(f"The following tags do not exist: {', '.join(missing_tag)}") 
-    #     return tags_data

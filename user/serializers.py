@@ -52,8 +52,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         else:
             role = 'user'
 
-        print(user, '---------------------------------------------')
-        print(user.id, 'iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiid')
 
         token['role'] = role  
         token['is_verified'] = user.is_verified

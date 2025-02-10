@@ -15,23 +15,16 @@ from user.serializers import UserSerializer
 # Create your views here.
 
 
-
+# list all available products that are in stock  and listed
 class ProductListView(ListAPIView):
     serializer_class = ProductSerializer
 
-    
     def get_queryset(self):
         a =  Product.objects.filter(is_listed=True, quantity__gt=0).order_by('coins')
-
-        print(a.explain(format='TEXT', analyze=True, verbose=True, timing=True, buffers=True))
         return a
-
-
-    # def get_queryset(self):
-    #     return Product.objects.filter(is_listed=True, quantity__gt=0).order_by('coins')
     
 
-
+# retrive a single product and check if the user has enough coins to get access
 class ProductRetriveView(RetrieveAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -44,7 +37,8 @@ class ProductRetriveView(RetrieveAPIView):
 
         return super().get(request, *args, **kwargs)
 
-    
+
+# View to retrieve the user's coin balance
 class UserCoinDetail(RetrieveAPIView):
     queryset = Users.objects.all()
     serializer_class = UserCoinsSerializer
@@ -53,6 +47,7 @@ class UserCoinDetail(RetrieveAPIView):
         return self.request.user
 
 
+# Viewset for managing user addresses
 class AddressViewModel(viewsets.ModelViewSet):
     queryset = Address.objects.all()
     serializer_class = UserAddressSerializer 
@@ -65,7 +60,7 @@ class AddressViewModel(viewsets.ModelViewSet):
         serializer.save(user = self.request.user)
 
     
-
+# list all available addresses of the logged-in user
 class UserAddress(ListAPIView):
     queryset = Address.objects.all()
     serializer_class = UserAddressSerializer
@@ -75,9 +70,7 @@ class UserAddress(ListAPIView):
         return Address.objects.filter(user = self.request.user, is_available=True)
     
 
-
-
-
+# create an order if the user has enough coins
 class CreateOrderView(APIView):
 
     def post(self, request, *args, **kwargs):
@@ -122,7 +115,7 @@ class CreateOrderView(APIView):
     
 
 
-
+# View to list all orders placed by the logged-in user
 class UserOrdersView(ListAPIView):
     serializer_class = OrderSerializer
 

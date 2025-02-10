@@ -27,8 +27,7 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 
-# Create your views here.
-
+# to mange tags CRUD oprtn
 class ManageTag(viewsets.ModelViewSet):
     queryset = Tag.objects.all().order_by('-id')
     serializer_class = TagSerializer
@@ -45,7 +44,7 @@ class ManageTag(viewsets.ModelViewSet):
         return queryset
     
 
-
+# list all users except superuser
 class UserList(ListAPIView):
     serializer_class = UserRetriUpdate
     pagination_class = AdminListPagination 
@@ -56,7 +55,8 @@ class UserList(ListAPIView):
         if search:
             queryset = queryset.filter(username__icontains=search)
         return queryset
-
+    
+# retrive a specific user
 class UserManage(RetrieveUpdateAPIView):
     queryset = Users.objects.all().order_by('-id')
     serializer_class = UserRetriUpdate
@@ -64,7 +64,8 @@ class UserManage(RetrieveUpdateAPIView):
     lookup_field = 'id'
     def get_queryset(self):
         return Users.objects.filter(is_superuser=False)
-
+    
+# list all questions
 class ListQuestions(ListAPIView):
     serializer_class = QuestionSerializer
     pagination_class = AdminListPagination
@@ -78,7 +79,8 @@ class ListQuestions(ListAPIView):
             queryset = queryset.filter(title__icontains=search)
 
         return queryset
-
+    
+# list all answers
 class ListAnswers(ListAPIView):
     serializer_class = AnswerSerializer
     permission_classes = [IsSuperUser] 
@@ -86,14 +88,14 @@ class ListAnswers(ListAPIView):
     def get_queryset(self):
         return Answers.objects.all()
     
-
+# retrive a specific question by ID
 class AdminQuestionDetailView(RetrieveAPIView):
     queryset = Question.objects.all()
     serializer_class =  QuestionSerializer
     permission_classes = [IsSuperUser] 
     lookup_field='id'
 
-
+# list all answer for a specific question 
 class AdminQuestionAnswerView(ListAPIView):
     serializer_class = AnswerSerializer
     permission_classes = [IsSuperUser] 
@@ -102,7 +104,7 @@ class AdminQuestionAnswerView(ListAPIView):
         question_id = self.kwargs.get('id')
         return  Answers.objects.filter(question_id=question_id)
     
-
+# Delete a question by ID
 class DeleteQuestionView(DestroyAPIView):
     queryset = Question.objects.all()
     permission_classes = [IsSuperUser] 
@@ -113,7 +115,8 @@ class DeleteQuestionView(DestroyAPIView):
         print(f"Deleting question with ID: {question_id}")
         return super().delete(request, *args, **kwargs)
     
-
+    
+# Delete an answer and update the question's answer count
 class DeleteAnswerView(DestroyAPIView):
     queryset = Answers.objects.all()
     permission_classes = [IsSuperUser] 
@@ -130,7 +133,7 @@ class DeleteAnswerView(DestroyAPIView):
         return super().delete(request, *args, **kwargs)
     
 
-
+# block and unblock a user
 class BlockUserView(UpdateAPIView):
     queryset = Users.objects.all()
     serializer_class = UserSerializer
@@ -147,7 +150,7 @@ class BlockUserView(UpdateAPIView):
         return Response({"message": f"User has been {status_message} successfully."},status=status.HTTP_200_OK)
 
 
-
+# mange product CRUD oprtion
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all().order_by('-id')
     serializer_class = ProductSerializer
@@ -155,46 +158,20 @@ class ProductViewSet(viewsets.ModelViewSet):
     pagination_class = AdminListPagination
 
 
-
-    # def create(self, request, *args, **kwargs):
-    #     serializer = self.get_serializer(data=request.data)
-    #     serializer.is_valid(raise_exception=True)
-    #     self.perform_create(serializer)
-    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-    # def perform_create(self, serializer):
-    #     serializer.save()
-
-
+# list all orders
 class OrdersList(ListAPIView):
     queryset = Order.objects.all().order_by('order_date')
     serializer_class = OrderListSerializer 
     permission_classes = [IsSuperUser]
 
-
+# Retrieve details of a specific order
 class OrderRetriveView(RetrieveAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderListSerializer
     lookup_field = 'id' 
+    
 
-
-
-# class OrderStatusUpdateView(UpdateAPIView):
-#     queryset = Order.objects.all()
-#     serializer_class = OrderStatusUpdateSerializer
-#     permission_classes = [IsSuperUser] 
-#     lookup_field = 'id'
-
-#     def partial_update(self, request, *args, **kwargs):
-#         instance = self.get_object() 
-#         if 'status' in request.data:
-#             print(request.data)
-#             # print(request.status)
-#             return super().partial_update(request, *args, **kwargs)
-#         return Response({"detail": "Status field is required"}, status=400)
-
-
-
+#  Update order status and create a notification
 class OrderStatusUpdateView(UpdateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderStatusUpdateSerializer

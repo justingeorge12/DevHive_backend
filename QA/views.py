@@ -16,16 +16,15 @@ from .pagination import InfiniteScrollPagination
 from .documents import QuestionDocument
 
 
+# list and create questions with filter and pagntion
 class QuestionListCreateAPIView(generics.ListCreateAPIView):
     queryset = Question.objects.all().order_by('-pos_vote')
     serializer_class = QuestionSerializer  
     pagination_class = InfiniteScrollPagination
 
-
     def get_queryset(self):
         filter_option = self.request.query_params.get('filter', 'votes')  
 
-        
         if filter_option == 'newest':
             return Question.objects.all().order_by('-id') 
         elif filter_option == 'alphabet':
@@ -49,12 +48,13 @@ class QuestionListCreateAPIView(generics.ListCreateAPIView):
         serializer.save(user=self.request.user)
     
 
-
+# retrive, update, and delete a single quetion by ID
 class QuestionRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
     lookup_field = 'id'
 
+# list available tags 
 class ListTags(generics.ListAPIView):
     serializer_class = TagSerializer
     
@@ -66,7 +66,7 @@ class ListTags(generics.ListAPIView):
         
         return Tag.objects.none()
     
-
+# list and create Answers, also update the answer count of perticular question
 class AnswerListCreateAPIView(generics.ListCreateAPIView):
     queryset = Answers.objects.all()
     serializer_class = AnswerSerializer 
@@ -77,10 +77,6 @@ class AnswerListCreateAPIView(generics.ListCreateAPIView):
         question.answer_count += 1
         question.save()
 
-        # user = self.request.user
-        # user.coins += 10 
-        # user.save()
-
     def get_queryset(self):
         question_id = self.request.query_params.get('question_id', None)
         
@@ -90,6 +86,7 @@ class AnswerListCreateAPIView(generics.ListCreateAPIView):
         return Answers.objects.filter(question_id=question_id).order_by('accepted').order_by('-pos_vote')
 
 
+# handle vote for question
 @api_view(['POST'])
 def handle_vote(request):
     user = request.user
@@ -98,17 +95,14 @@ def handle_vote(request):
 
     question = Question.objects.get(id = question_id)
 
-
     if question.user == user:
         return Response({'detail': "You cannot vote on your own question."}, status=403)
 
-
     vote = QuestionVotes.objects.filter(user=user, question=question).first()
-
 
     if vote:
         if vote.vote_type == vote_type:
-            vote.delete()
+            vote.delete()                     # Remove vote if the same type is clicked again
             if vote_type == 'upvote':
                 question.pos_vote -= 1
                 question.user.coins -= 2
@@ -131,17 +125,17 @@ def handle_vote(request):
                 question.user.coins -= 2
                 question.user.total_votes -= 2
     else:
+        # Create a new vote entry
         QuestionVotes.objects.create(user=user, question=question, vote_type= vote_type)
         if vote_type == 'upvote':
             question.pos_vote += 1
             question.user.coins += 2
             question.user.total_votes += 1
-            print(question.user, '...........', question.user.total_votes)
 
         elif vote_type == 'downvote':
             question.neg_vote += 1
             question.user.total_votes -= 1
-            print(question.user, '...........', question.user.total_votes)
+
     question.save()
     question.user.save()
 
@@ -151,6 +145,7 @@ def handle_vote(request):
     return Response({'upvotes': upvotes, 'downvotes': downvotes, 'user_vote': vote_type, 'tot_posvote':votedQuestion.pos_vote, 'tot_negvote':votedQuestion.neg_vote})
 
 
+# Handle saving a question
 @api_view(['POST'])
 def handleSave(request):
     user = request.user
@@ -168,7 +163,7 @@ def handleSave(request):
 
 
 
-
+# Handle voting for answers
 @api_view(['POST'])
 def handle_answer_vote(request):
     user = request.user
@@ -228,7 +223,7 @@ def handle_answer_vote(request):
 
 
 
-
+# Handle saving an answer
 @api_view(['POST'])
 def handleAnswerSave(request):
     user = request.user
@@ -246,17 +241,7 @@ def handleAnswerSave(request):
         return Response('you are already saved this answer')
 
 
-# def SearchQuestions(request):
-#     query = request.GET.get('q')
-#     if query:
-#         questions = QuestionDocument.search().query("multi_match", query=query, fields=['title'])
-#         results = questions.to_queryset()
-#         print(results, '--------------------------------------------------------------------------------------')
-#     else:
-#         results = Question.objects.none()
-#     return JsonResponse({"results": list(results.values('id','title', 'body', 'created', 'pos_vote', 'neg_vote', 'user', 'accepted', 'answer_count', 'tags', 'closed'))})
-
-
+# Search for questions by title
 def SearchQuestions(request):
     query = request.GET.get('q')
     

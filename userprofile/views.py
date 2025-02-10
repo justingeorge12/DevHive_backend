@@ -1,10 +1,10 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework.response import Response
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework import status, generics, viewsets
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
-from rest_framework.generics import RetrieveUpdateAPIView, GenericAPIView
+from rest_framework.generics import RetrieveUpdateAPIView, GenericAPIView, RetrieveUpdateDestroyAPIView
 from .serializers import *
 from user.serializers import UserSerializer
 from user.models import Users
@@ -12,19 +12,12 @@ from QA.models import *
 from QA.serializer import *
 from rewards.models import Address
 from rewards.serializers import UserAddressSerializer
-# from django_filters
 from rest_framework import filters
 
 
 
-# Create your views here.
-
-
+# view set for managing user profile
 class UserProfile(viewsets.ModelViewSet):
-    """
-        view set for managing user profile
-    """
-    
     queryset = Users.objects.all()
     serializer_class = UserSerializer
 
@@ -33,9 +26,8 @@ class UserProfile(viewsets.ModelViewSet):
         return Users.objects.filter(id = user.id)
 
 
-
+# to  change the user password
 class ChangePassword(APIView):
-
     def post(self, request, *args, **kwargs):
         serializer = ChangePasswordSerializer(data = request.data , context = {'request':request})
         serializer.is_valid(raise_exception=True)
@@ -46,23 +38,22 @@ class ChangePassword(APIView):
         return Response({'detail': 'change password succesfull'}, status=status.HTTP_200_OK )
     
 
-
+# retirves the question ansked by the current user
 class UserQuestionView(ListAPIView):
     serializer_class = QuestionSerializer
 
     def get_queryset(self):
         return Question.objects.filter(user=self.request.user).order_by('-created')
     
-
+# retirves the answer don by the current user
 class UserAnswerView(ListAPIView):
     serializer_class = AnswerSerializer
 
     def get_queryset(self):
-        return Answers.objects.filter(user=self.request.user)
+        return Answers.objects.filter(user=self.request.user).order_by('-id')
     
 
-
-
+# retrive list of saved questions
 class UserSavedView(ListAPIView):
     serializer_class = SavedQuestionSerializer
 
@@ -70,7 +61,7 @@ class UserSavedView(ListAPIView):
         user = self.request.user
         return SavedQuestion.objects.filter(user_id=user.id)
     
-
+# to update user profile
 class UserProfileUpdateView(RetrieveUpdateAPIView):
     queryset = Users.objects.all()
     serializer_class = UserSerializer
@@ -93,17 +84,46 @@ class UserProfileUpdateView(RetrieveUpdateAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 
-
+# retrive all answers for a given question
 class UserQuestionAnswerView(ListAPIView):
     serializer_class = AnswerSerializer
     def get_queryset(self):
         question_id = self.kwargs.get('id')
         return  Answers.objects.filter(question_id=question_id)
 
+# user to update or delete their own answers
+class UserAnswerDetailView(RetrieveUpdateDestroyAPIView):
+    serializer_class = AnswerSerializer
 
-
+    def get_queryset(self):
+        return Answers.objects.filter(user = self.request.user)
     
+    def get_object(self):
+        obj = super().get_object()
+        if obj.user != self.request.user:
+            raise PermissionDenied("You do not have the permission to view this")
+        return obj
+    
+    def perform_update(self, serializer):
+        answer = self.get_object()
+        if answer.user != self.request.user:
+            raise PermissionDenied("you are not allowed to edit the answer")
+        
+        if set(serializer.validated_data.keys()) != {'body'}:
+            raise PermissionDenied("You can only update the body field.")
+        serializer.save()
 
+    def perform_destroy(self, instance):
+        if instance.user != self.request.user:
+            raise PermissionDenied("You are not allowed to delete the answer")
+        if instance.accepted == True:
+            raise PermissionDenied("You cannot delete a accepted answer")
+        if instance.pos_vote > 0:
+            raise PermissionDenied("You cannot delete a answer which has positive votes")
+        
+        instance.delete()
+    
+# user to follow another user
 class FollowUserView(APIView):
 
     def post(self, request, user_id):
@@ -116,7 +136,7 @@ class FollowUserView(APIView):
         except Users.DoesNotExist:
             return Response({"error":"user does not found"}, status=status.HTTP_404_NOT_FOUND)
 
-
+# user to unfollow another user
 class UnfollowUserView(APIView):
 
     def post(self, request, user_id):
@@ -127,7 +147,7 @@ class UnfollowUserView(APIView):
         except Users.DoesNotExist:
             return Response({"error":"user does not found"}, status=status.HTTP_404_NOT_FOUND)
         
-
+# Retrieves a list of users following a specific user
 class FollowersListView(ListAPIView):
     serializer_class = FollowerSerializer
 
@@ -139,7 +159,7 @@ class FollowersListView(ListAPIView):
             raise NotFound(detail="User not found with the specified ID.")
 
     
-
+# Retrieves a list of users that a specific user is following
 class FollowingListView(ListAPIView):
     serializer_class = FollowingSerializer
 
@@ -151,7 +171,7 @@ class FollowingListView(ListAPIView):
             raise NotFound(detail='user not found with the specified ID')
         
 
-
+#  Retrieves the follower and following count of a user
 class UserFollowCountsView(APIView):
     def get(self, request, username=None):
         if username:
@@ -164,7 +184,7 @@ class UserFollowCountsView(APIView):
         }
         return Response(data, status=status.HTTP_200_OK)
     
-    
+# Checks if the logged-in user is following another user
 class IsFollowingView(APIView):
 
     def get(self, request, username):
@@ -176,7 +196,7 @@ class IsFollowingView(APIView):
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
     
-
+# Retrieves another user's profile based on username
 class OtherUserProfile(generics.RetrieveAPIView):
     queryset = Users.objects.all()
     serializer_class = UserSerializer
@@ -186,7 +206,6 @@ class OtherUserProfile(generics.RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         try:
             user = self.request.user
-            print(user.username, args, kwargs, 'uuuuuuuuuuuussssr')
             if user.username == kwargs['username']:
                 return Response({"detail":'Same user profile'})
             return self.retrieve(request, *args, **kwargs)
@@ -197,6 +216,7 @@ class OtherUserProfile(generics.RetrieveAPIView):
             )
             
 
+# Allows a user to retrieve or update their address
 class AddressRetrieveUpdateView(RetrieveUpdateAPIView):
     queryset = Address.objects.all()
     serializer_class = UserAddressSerializer
@@ -207,7 +227,7 @@ class AddressRetrieveUpdateView(RetrieveUpdateAPIView):
     
 
 
-
+# Searches for other users based on username or first name
 class SeachOtherUser(ListAPIView):
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter]
